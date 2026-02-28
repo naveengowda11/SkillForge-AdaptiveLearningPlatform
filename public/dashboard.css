@@ -1,0 +1,52 @@
+/* PROFILE PHOTO */
+.profile-photo{
+  width:42px;
+  height:42px;
+  border-radius:50%;
+  object-fit:cover;
+  margin-right:15px;
+  border:2px solid #3b82f6;
+}
+
+/* RIGHT SECTION */
+.right-section{
+  display:flex;
+  align-items:center;
+}
+
+/* SECTION TITLE */
+.section-title{
+  margin:25px 0 15px 0;
+}
+
+/* CONTINUE CARD */
+.continue-card{
+  display:flex;
+  gap:20px;
+  align-items:center;
+  margin-bottom:30px;
+}
+
+.continue-card img{
+  width:260px;
+  border-radius:15px;
+}
+
+/* HORIZONTAL SCROLL */
+.horizontal-scroll{
+  display:flex;
+  gap:20px;
+  overflow-x:auto;
+  padding-bottom:10px;
+}
+
+/* PRIMARY BUTTON */
+.primary-btn{
+  margin-top:10px;
+  padding:10px 18px;
+  border:none;
+  border-radius:8px;
+  background:linear-gradient(90deg,#06b6d4,#3b82f6);
+  color:white;
+  cursor:pointer;
+}

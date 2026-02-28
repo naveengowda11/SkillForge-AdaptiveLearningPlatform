@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SkillForge Courses</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+
+<style>
+*{
+  margin:0;
+  padding:0;
+  box-sizing:border-box;
+  font-family:'Inter',sans-serif;
+}
+
+body{
+  background: radial-gradient(circle at 20% 20%, #0f172a, #020617);
+  color:white;
+  min-height:100vh;
+}
+
+body.light-mode{
+  background:#f1f5f9;
+  color:#0f172a;
+}
+
+.container{
+  padding:40px;
+}
+
+.header{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  margin-bottom:40px;
+}
+
+.course-grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(280px,1fr));
+  gap:25px;
+}
+
+.course-card{
+  background:rgba(255,255,255,0.05);
+  border-radius:20px;
+  overflow:hidden;
+  transition:0.3s;
+  backdrop-filter:blur(10px);
+}
+
+.course-card:hover{
+  transform:translateY(-6px);
+  box-shadow:0 0 25px rgba(59,130,246,0.6);
+}
+
+.course-card img{
+  width:100%;
+  height:180px;
+  object-fit:cover;
+}
+
+.course-content{
+  padding:20px;
+}
+
+.level{
+  font-size:12px;
+  opacity:0.7;
+  margin-bottom:8px;
+}
+
+button{
+  margin-top:15px;
+  padding:10px 16px;
+  border:none;
+  border-radius:8px;
+  background:linear-gradient(90deg,#06b6d4,#3b82f6);
+  color:white;
+  cursor:pointer;
+  transition:0.3s;
+}
+
+button:hover{
+  transform:scale(1.05);
+}
+</style>
+</head>
+
+<body>
+
+<div class="container">
+
+  <div class="header">
+    <h1>Explore AI Courses</h1>
+    <button onclick="window.location.href='dashboard.html'">← Back</button>
+  </div>
+
+  <div class="course-grid">
+
+    <div class="course-card">
+      <img src="assets/ml.jpg">
+      <div class="course-content">
+        <div class="level">Beginner</div>
+        <h3>Machine Learning Foundations</h3>
+        <p>Understand core ML algorithms and concepts.</p>
+        <button onclick="enrollCourse('Machine Learning Foundations')">
+          Enroll
+        </button>
+      </div>
+    </div>
+
+    <div class="course-card">
+      <img src="assets/dp.jpg">
+      <div class="course-content">
+        <div class="level">Intermediate</div>
+        <h3>Deep Learning Mastery</h3>
+        <p>Neural networks, CNNs, RNNs and more.</p>
+        <button onclick="enrollCourse('Deep Learning Mastery')">
+          Enroll
+        </button>
+      </div>
+    </div>
+
+    <div class="course-card">
+      <img src="assets/nlp.jpg">
+      <div class="course-content">
+        <div class="level">Advanced</div>
+        <h3>Natural Language Processing</h3>
+        <p>Transformers, embeddings and LLM basics.</p>
+        <button onclick="enrollCourse('Natural Language Processing')">
+          Enroll
+        </button>
+      </div>
+    </div>
+
+  </div>
+
+</div>
+
+<script>
+
+// 🔐 PAGE PROTECTION
+const token = localStorage.getItem("token");
+if(!token){
+  window.location.href = "index.html";
+}
+
+// 🌙 APPLY GLOBAL THEME
+if(localStorage.getItem("theme") === "light"){
+  document.body.classList.add("light-mode");
+}
+
+// 🎯 FRONTEND ENROLL (Temporary)
+function enrollCourse(courseName){
+  alert("You enrolled in: " + courseName + "\n\nBackend integration coming in Phase 2.");
+}
+</script>
+
+</body>
+</html>

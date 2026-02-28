@@ -1,0 +1,573 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SkillForge AI Dashboard</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<style>
+*{margin:0;padding:0;box-sizing:border-box;font-family:'Inter',sans-serif}
+
+body{
+  background: radial-gradient(circle at 20% 20%, #0f172a, #020617);
+  color:white;
+  overflow-x:hidden;
+}
+
+.dashboard-container{
+  display:flex;
+  min-height:100vh;
+}
+
+/* ===== SIDEBAR ===== */
+.sidebar{
+  width:260px;
+  background:rgba(15,23,42,0.85);
+  backdrop-filter:blur(15px);
+  border-right:1px solid rgba(255,255,255,0.05);
+  padding:25px;
+  transition:0.3s;
+}
+
+.sidebar h2{
+  color:#38bdf8;
+  margin-bottom:30px;
+  font-weight:700;
+}
+
+.nav-item{
+  padding:12px 15px;
+  margin-bottom:10px;
+  border-radius:12px;
+  cursor:pointer;
+  transition:0.3s;
+  color:#cbd5e1;
+}
+
+.nav-item:hover,
+.nav-item.active{
+  background:linear-gradient(90deg,#06b6d4,#3b82f6);
+  color:white;
+  box-shadow:0 0 15px rgba(59,130,246,0.6);
+}
+
+/* ===== MAIN ===== */
+.main{
+  flex:1;
+  padding:30px;
+}
+
+/* ===== TOPBAR ===== */
+.topbar{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  margin-bottom:30px;
+}
+
+.welcome{
+  font-size:22px;
+  font-weight:600;
+}
+
+.profile-badge{
+  background:linear-gradient(90deg,#06b6d4,#3b82f6);
+  padding:8px 16px;
+  border-radius:20px;
+  font-size:14px;
+}
+.theme-btn{
+  background:rgba(255,255,255,0.1);
+  border:none;
+  padding:8px 12px;
+  border-radius:10px;
+  margin-right:10px;
+  cursor:pointer;
+  color:white;
+  transition:0.3s;
+}
+
+.theme-btn:hover{
+  transform:scale(1.1);
+}
+.profile-photo{
+  width:40px;
+  height:40px;
+  border-radius:50%;
+  object-fit:cover;
+  border:2px solid #3b82f6;
+}
+.logout-btn{
+  background:linear-gradient(90deg,#ef4444,#f87171);
+  border:none;
+  padding:8px 15px;
+  border-radius:10px;
+  color:white;
+  cursor:pointer;
+  transition:0.3s;
+}
+
+.logout-btn:hover{
+  transform:scale(1.05);
+}
+
+/* ===== CARDS ===== */
+.grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
+  gap:20px;
+}
+
+.card{
+  background:rgba(255,255,255,0.05);
+  border:1px solid rgba(255,255,255,0.05);
+  backdrop-filter:blur(15px);
+  padding:20px;
+  border-radius:20px;
+  transition:0.3s;
+}
+
+.card:hover{
+  transform:translateY(-5px);
+  box-shadow:0 0 20px rgba(59,130,246,0.5);
+}
+
+.card h3 {
+  font-size: 16px;
+  opacity: 0.8;
+}
+
+.card p {
+  font-size: 20px;
+  font-weight: 600;
+  margin-top: 5px;
+}
+
+/* ===== CHART ===== */
+.chart-box{
+  max-width:450px;
+  margin-top:30px;
+  background:rgba(255,255,255,0.05);
+  padding:20px;
+  border-radius:20px;
+  border:1px solid rgba(255,255,255,0.05);
+}
+
+/* ===== SECTIONS ===== */
+.section{display:none;animation:fade 0.4s ease-in-out}
+.section.active{display:block}
+
+@keyframes fade{
+  from{opacity:0;transform:translateY(10px)}
+  to{opacity:1;transform:translateY(0)}
+}
+
+/* ===== MOBILE ===== */
+.menu-toggle{
+  display:none;
+  font-size:22px;
+  cursor:pointer;
+}
+
+@media(max-width:768px){
+  .sidebar{
+    position:fixed;
+    left:-260px;
+    top:0;
+    height:100%;
+    z-index:1000;
+  }
+  .sidebar.active{
+    left:0;
+  }
+  .menu-toggle{
+    display:block;
+  }
+}
+.video-card{
+  min-width:260px;
+  background:rgba(255,255,255,0.05);
+  border-radius:15px;
+  overflow:hidden;
+  cursor:pointer;
+  transition:0.3s;
+}
+
+.video-card img{
+  width:100%;
+  height:150px;
+  object-fit:cover;
+}
+
+.video-card:hover{
+  transform:scale(1.05);
+  box-shadow:0 0 20px rgba(6,182,212,0.5);
+}
+
+.video-info{
+  padding:10px;
+}
+
+.video-info h4{
+  font-size:14px;
+  margin-bottom:5px;
+}
+
+.video-info span{
+  font-size:12px;
+  color:#94a3b8;
+}
+
+.course-card{
+  background:rgba(255,255,255,0.05);
+  border-radius:15px;
+  overflow:hidden;
+  transition:0.3s;
+}
+
+.course-card img{
+  width:100%;
+  height:160px;
+  object-fit:cover;
+}
+
+.course-card:hover{
+  transform:translateY(-5px);
+  box-shadow:0 0 20px rgba(59,130,246,0.6);
+}
+
+.course-content{
+  padding:15px;
+}
+body.light-mode{
+  background:#f1f5f9;
+  color:#0f172a;
+}
+
+body.light-mode .sidebar{
+  background:#ffffff;
+  border-right:1px solid #e2e8f0;
+}
+
+body.light-mode .card,
+body.light-mode .chart-box{
+  background:#ffffff;
+  border:1px solid #e2e8f0;
+}
+
+body.light-mode .nav-item{
+  color:#334155;
+}
+
+body.light-mode .nav-item.active{
+  background:linear-gradient(90deg,#06b6d4,#3b82f6);
+  color:white;
+}
+
+body.light-mode .theme-btn{
+  color:#0f172a;
+}
+</style>
+</head>
+
+<body>
+
+<div class="dashboard-container">
+
+ <div class="sidebar" id="sidebar">
+  <h2>SkillForge</h2>
+
+  <div class="nav-item" onclick="window.location.href='dashboard.html'">
+    Dashboard
+  </div>
+
+  <div class="nav-item" onclick="window.location.href='courses.html'">
+    Courses
+  </div>
+
+  <div class="nav-item" onclick="window.location.href='adaptive-test.html'">
+    Adaptive Tests
+  </div>
+
+  <div class="nav-item" onclick="window.location.href='performance.html'">
+    Performance
+  </div>
+
+  <div class="nav-item" onclick="window.location.href='profile.html'">
+    Profile
+  </div>
+
+  <div class="nav-item" onclick="window.location.href='settings.html'">
+    Settings
+  </div>
+</div>
+
+  <div class="main">
+
+    <div class="topbar">
+      <div>
+        <span class="menu-toggle" onclick="toggleSidebar()">☰</span>
+        <span class="welcome" id="welcomeText">Welcome 👋</span>
+      </div>
+      <div>
+        <img src="assets/default-avatar.png" id="profilePhoto" class="profile-photo">
+        <button id="themeToggle" class="theme-btn">🌙</button>
+        <button class="logout-btn" onclick="logout()">Logout</button>
+        
+      </div>
+    </div>
+
+    <div id="dashboard" class="section active">
+
+  <!-- TOP SUMMARY CARDS -->
+  <div class="grid" style="margin-bottom:30px;">
+    <div class="card">
+      <h3>Enrolled Course</h3>
+      <p>AI Mastery Program</p>
+    </div>
+
+    <div class="card">
+      <h3>Progress</h3>
+      <p>72% Completed</p>
+    </div>
+
+    <div class="card">
+      <h3>Next Adaptive Test</h3>
+      <p>Available Now</p>
+    </div>
+  </div>
+
+ 
+
+  <!-- CONTINUE LEARNING -->
+  <h2 style="margin-bottom:15px;">Continue Learning</h2>
+  <div class="card" style="margin-bottom:30px;">
+    <div style="display:flex;flex-wrap:wrap;gap:20px;align-items:center;">
+      <img src="https://images.unsplash.com/photo-1555949963-aa79dcee981c"
+           style="width:280px;border-radius:15px;">
+      <div>
+        <h3>AI Mastery Program</h3>
+        <p>Module 4: Neural Networks Deep Dive</p>
+        <button style="
+          margin-top:10px;
+          padding:10px 18px;
+          border:none;
+          border-radius:8px;
+          background:linear-gradient(90deg,#06b6d4,#3b82f6);
+          color:white;
+          cursor:pointer;">
+          Resume Learning
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- SUGGESTED VIDEOS -->
+  <h2 style="margin-bottom:15px;">Suggested For You</h2>
+  <div style="
+      display:flex;
+      gap:20px;
+      overflow-x:auto;
+      padding-bottom:10px;
+      margin-bottom:30px;
+  ">
+
+    <div class="video-card">
+      <img src="assets/ml.jpg">
+      <div class="video-info">
+        <h4>Introduction to Machine Learning</h4>
+        <span>12:45 mins</span>
+      </div>
+    </div>
+
+    <div class="video-card">
+      <img src="assets/dp.jpg">
+      <div class="video-info">
+        <h4>Deep Learning Basics</h4>
+        <span>18:20 mins</span>
+      </div>
+    </div>
+
+    <div class="video-card">
+      <img src="assets/nlp.jpg">
+      <div class="video-info">
+        <h4>Natural Language Processing</h4>
+        <span>15:10 mins</span>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- NEW COURSES -->
+  <h2 style="margin-bottom:15px;">Newly Added Courses</h2>
+  <div class="grid">
+
+    <div class="course-card">
+      <img src="assets/aib.jpg">
+      <div class="course-content">
+        <h4>AI for Beginners</h4>
+        <p>Beginner Level</p>
+      </div>
+    </div>
+
+    <div class="course-card">
+      <img src="assets/cv.jpg">
+      <div class="course-content">
+        <h4>Computer Vision Advanced</h4>
+        <p>Advanced Level</p>
+      </div>
+    </div>
+
+    <div class="course-card">
+      <img src="assets/genai.jpg">
+      <div class="course-content">
+        <h4>Generative AI</h4>
+        <p>Intermediate Level</p>
+      </div>
+    </div>
+
+  </div>
+
+
+
+    <div id="courses" class="section">
+      <div class="card">
+        <h3>AI Fundamentals</h3>
+        <p>Beginner → Advanced AI journey</p>
+      </div>
+    </div>
+
+    <div id="tests" class="section">
+      <div class="card">
+        <h3>Adaptive Test</h3>
+        <p>AI powered difficulty adjustment</p>
+      </div>
+    </div>
+
+    <div id="performance" class="section">
+      <div class="chart-box">
+        <canvas id="performanceChart"></canvas>
+      </div>
+    </div>
+
+    <div id="settings" class="section">
+      <div class="card">
+        <p><strong>Email:</strong> <span id="userEmail"></span></p>
+      </div>
+    </div>
+
+  </div>
+
+</div>
+
+<script>
+
+// Google redirect handling
+const params = new URLSearchParams(window.location.search);
+if(params.get("token")){
+  localStorage.setItem("token", params.get("token"));
+  localStorage.setItem("name", params.get("name"));
+  localStorage.setItem("email", params.get("email"));
+  window.history.replaceState({}, document.title, "dashboard.html");
+}
+
+// Auth check
+function loadUser(){
+  const token = localStorage.getItem("token");
+  if(!token){
+    window.location.href="index.html";
+    return;
+  }
+
+  const name = localStorage.getItem("name");
+  const email = localStorage.getItem("email");
+
+  document.getElementById("welcomeText").innerText = "Welcome, " + name + " 👋";
+ 
+  document.getElementById("userEmail").innerText = email;
+}
+
+loadUser();
+
+
+// Sidebar toggle
+function toggleSidebar(){
+  document.getElementById("sidebar").classList.toggle("active");
+}
+
+// Logout
+function logout(){
+  localStorage.clear();
+  window.location.href="index.html";
+}
+const themeToggle = document.getElementById("themeToggle");
+
+// Load saved theme
+if(localStorage.getItem("theme") === "light"){
+  document.body.classList.add("light-mode");
+  themeToggle.textContent = "☀";
+}
+
+themeToggle.addEventListener("click", ()=>{
+  document.body.classList.toggle("light-mode");
+
+  if(document.body.classList.contains("light-mode")){
+    localStorage.setItem("theme","light");
+    themeToggle.textContent = "☀";
+  } else {
+    localStorage.setItem("theme","dark");
+    themeToggle.textContent = "🌙";
+  }
+});
+async function loadProfilePhoto(){
+  const token = localStorage.getItem("token");
+  if(!token) return;
+
+  try{
+    const res = await fetch("http://localhost:5000/api/profile",{
+      headers:{
+        Authorization: "Bearer " + token
+      }
+    });
+
+    const data = await res.json();
+
+    if(data && data.photo){
+      document.getElementById("profilePhoto").src =
+        "http://localhost:5000/" + data.photo;
+    }
+  } catch(err){
+    console.log("Profile photo load failed");
+  }
+}
+
+loadProfilePhoto();
+// Chart
+new Chart(document.getElementById('performanceChart'),{
+  type:'radar',
+  data:{
+    labels:['ML','DL','NLP','Math','Coding'],
+    datasets:[{
+      label:'Skill Level',
+      data:[75,60,70,65,80],
+      borderColor:'#06b6d4',
+      backgroundColor:'rgba(6,182,212,0.2)'
+    }]
+  }
+});
+// Automatically highlight current page in sidebar
+const currentPage = window.location.pathname.split("/").pop();
+
+document.querySelectorAll(".nav-item").forEach(item => {
+  const onclick = item.getAttribute("onclick");
+  if(onclick && onclick.includes(currentPage)){
+    item.classList.add("active");
+  }
+});
+</script>
+
+</body>
+</html>

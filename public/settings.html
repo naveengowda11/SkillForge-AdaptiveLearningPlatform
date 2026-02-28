@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SkillForge Settings</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+
+<style>
+*{
+  margin:0;
+  padding:0;
+  box-sizing:border-box;
+  font-family:'Inter',sans-serif;
+}
+
+body{
+  background: radial-gradient(circle at 20% 20%, #0f172a, #020617);
+  color:white;
+  min-height:100vh;
+  padding:40px;
+}
+
+body.light-mode{
+  background:#f1f5f9;
+  color:#0f172a;
+}
+
+.container{
+  max-width:800px;
+  margin:auto;
+}
+
+.section{
+  background:rgba(255,255,255,0.05);
+  backdrop-filter:blur(10px);
+  padding:25px;
+  border-radius:20px;
+  margin-bottom:25px;
+}
+
+.section h2{
+  margin-bottom:15px;
+}
+
+button{
+  padding:10px 18px;
+  border:none;
+  border-radius:8px;
+  background:linear-gradient(90deg,#06b6d4,#3b82f6);
+  color:white;
+  cursor:pointer;
+  transition:0.3s;
+}
+
+button:hover{
+  transform:scale(1.05);
+}
+
+.logout-btn{
+  background:linear-gradient(90deg,#ef4444,#f87171);
+}
+
+input, textarea{
+  width:100%;
+  padding:10px;
+  margin-top:10px;
+  border-radius:8px;
+  border:none;
+}
+
+textarea{
+  resize:none;
+  height:100px;
+}
+</style>
+</head>
+
+<body>
+
+<div class="container">
+
+  <h1 style="margin-bottom:30px;">Settings</h1>
+
+  <!-- ACCOUNT INFO -->
+  <div class="section">
+    <h2>Account Information</h2>
+    <p><strong>Name:</strong> <span id="accountName"></span></p>
+    <p><strong>Email:</strong> <span id="accountEmail"></span></p>
+  </div>
+
+  <!-- APPEARANCE -->
+  <div class="section">
+    <h2>Appearance</h2>
+    <button id="themeToggle">Toggle Dark / Light Mode</button>
+  </div>
+
+  <!-- FEEDBACK -->
+  <div class="section">
+    <h2>Send Feedback</h2>
+    <textarea id="feedbackText" placeholder="Write your feedback..."></textarea>
+    <button onclick="submitFeedback()">Submit Feedback</button>
+  </div>
+
+  <!-- SECURITY -->
+  <div class="section">
+    <h2>Security</h2>
+    <button class="logout-btn" onclick="logout()">Logout</button>
+  </div>
+
+  <button onclick="window.location.href='dashboard.html'">
+    ← Back to Dashboard
+  </button>
+
+</div>
+
+<script>
+
+// 🔐 PROTECTION
+const token = localStorage.getItem("token");
+if(!token){
+  window.location.href="index.html";
+}
+
+// 👤 LOAD USER INFO
+document.getElementById("accountName").innerText =
+  localStorage.getItem("name") || "User";
+
+document.getElementById("accountEmail").innerText =
+  localStorage.getItem("email") || "Not Available";
+
+// 🌙 LOAD SAVED THEME
+const themeToggle = document.getElementById("themeToggle");
+
+if(localStorage.getItem("theme")==="light"){
+  document.body.classList.add("light-mode");
+}
+
+themeToggle.addEventListener("click",()=>{
+  document.body.classList.toggle("light-mode");
+
+  if(document.body.classList.contains("light-mode")){
+    localStorage.setItem("theme","light");
+  }else{
+    localStorage.setItem("theme","dark");
+  }
+});
+
+// 📝 FEEDBACK (Frontend Only)
+function submitFeedback(){
+  const text = document.getElementById("feedbackText").value.trim();
+
+  if(!text){
+    alert("Please enter feedback before submitting.");
+    return;
+  }
+
+  alert("Thanks for your feedback! 🚀\n\nBackend integration coming next phase.");
+  document.getElementById("feedbackText").value="";
+}
+
+// 🔓 LOGOUT
+function logout(){
+  localStorage.clear();
+  window.location.href="index.html";
+}
+
+</script>
+
+</body>
+</html>

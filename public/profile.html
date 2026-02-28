@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SkillForge Profile</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+
+<style>
+*{
+  margin:0;
+  padding:0;
+  box-sizing:border-box;
+  font-family:'Inter',sans-serif;
+}
+
+body{
+  background: radial-gradient(circle at 20% 20%, #0f172a, #020617);
+  color:white;
+  min-height:100vh;
+  padding:40px;
+}
+
+/* Light mode support */
+body.light-mode{
+  background:#f1f5f9;
+  color:#0f172a;
+}
+
+.profile-container{
+  max-width:600px;
+  margin:auto;
+}
+
+.profile-card{
+  background:rgba(255,255,255,0.05);
+  padding:30px;
+  border-radius:20px;
+  backdrop-filter:blur(10px);
+}
+
+.profile-photo-large{
+  width:130px;
+  height:130px;
+  border-radius:50%;
+  object-fit:cover;
+  border:3px solid #3b82f6;
+  margin-bottom:20px;
+}
+
+.profile-card h2{
+  margin-bottom:15px;
+}
+
+.profile-card p{
+  margin-bottom:8px;
+}
+
+button{
+  margin-top:20px;
+  padding:10px 18px;
+  border:none;
+  border-radius:8px;
+  background:linear-gradient(90deg,#06b6d4,#3b82f6);
+  color:white;
+  cursor:pointer;
+  transition:0.3s;
+}
+
+button:hover{
+  transform:scale(1.05);
+}
+
+form{
+  background:rgba(255,255,255,0.05);
+  padding:30px;
+  border-radius:20px;
+  backdrop-filter:blur(10px);
+  display:none;
+}
+
+input, textarea{
+  width:100%;
+  margin-bottom:12px;
+  padding:10px;
+  border-radius:8px;
+  border:none;
+}
+
+textarea{
+  resize:none;
+  height:80px;
+}
+</style>
+</head>
+
+<body>
+
+<div class="profile-container">
+
+  <!-- PROFILE CARD -->
+  <div id="profileView" class="profile-card" style="display:none;">
+    <img id="viewPhoto" class="profile-photo-large" src="assets/default-avatar.png">
+    <h2 id="viewName"></h2>
+
+    <p><strong>Phone:</strong> <span id="viewPhone"></span></p>
+    <p><strong>Education:</strong> <span id="viewEducation"></span></p>
+    <p><strong>University:</strong> <span id="viewUniversity"></span></p>
+    <p><strong>Graduation Year:</strong> <span id="viewGradYear"></span></p>
+    <p><strong>Status:</strong> <span id="viewStatus"></span></p>
+    <p><strong>Current Role:</strong> <span id="viewRole"></span></p>
+    <p><strong>Skills:</strong> <span id="viewSkills"></span></p>
+    <p><strong>Interests:</strong> <span id="viewInterests"></span></p>
+    <p><strong>LinkedIn:</strong> <span id="viewLinkedIn"></span></p>
+    <p><strong>GitHub:</strong> <span id="viewGithub"></span></p>
+    <p><strong>Bio:</strong> <span id="viewBio"></span></p>
+
+    <button onclick="showEdit()">Edit Profile</button>
+  </div>
+
+  <!-- PROFILE FORM -->
+  <form id="profileForm" enctype="multipart/form-data">
+    <input type="file" name="photo">
+    <input type="text" name="phone" placeholder="Phone">
+    <input type="date" name="dob">
+    <input type="text" name="education" placeholder="Highest Education">
+    <input type="text" name="university" placeholder="University">
+    <input type="text" name="graduation_year" placeholder="Graduation Year">
+    <input type="text" name="current_status" placeholder="Student / Working">
+    <input type="text" name="current_role" placeholder="Current Role">
+    <input type="text" name="skills" placeholder="Skills (comma separated)">
+    <input type="text" name="interests" placeholder="Areas of Interest">
+    <input type="text" name="linkedin" placeholder="LinkedIn URL">
+    <input type="text" name="github" placeholder="GitHub URL">
+    <textarea name="bio" placeholder="Short Bio"></textarea>
+
+    <button type="submit">Save Profile</button>
+  </form>
+
+</div>
+
+<script>
+
+// APPLY THEME GLOBALLY
+if(localStorage.getItem("theme") === "light"){
+  document.body.classList.add("light-mode");
+}
+
+const token = localStorage.getItem("token");
+if(!token){
+  window.location.href="index.html";
+}
+
+const form = document.getElementById("profileForm");
+const profileView = document.getElementById("profileView");
+
+async function loadProfile(){
+  try{
+    const res = await fetch("http://localhost:5000/api/profile",{
+      headers:{ Authorization:"Bearer "+token }
+    });
+
+    if(!res.ok){
+      form.style.display="block";
+      return;
+    }
+
+    const data = await res.json();
+    if(!data){
+      form.style.display="block";
+      return;
+    }
+
+    profileView.style.display="block";
+
+    document.getElementById("viewPhoto").src =
+      data.photo ? "http://localhost:5000/"+data.photo :
+      "assets/default-avatar.png";
+
+    document.getElementById("viewName").innerText =
+      localStorage.getItem("name");
+
+    document.getElementById("viewPhone").innerText = data.phone || "-";
+    document.getElementById("viewEducation").innerText = data.education || "-";
+    document.getElementById("viewUniversity").innerText = data.university || "-";
+    document.getElementById("viewGradYear").innerText = data.graduation_year || "-";
+    document.getElementById("viewStatus").innerText = data.current_status || "-";
+    document.getElementById("viewRole").innerText = data.current_role || "-";
+    document.getElementById("viewSkills").innerText = data.skills || "-";
+    document.getElementById("viewInterests").innerText = data.interests || "-";
+    document.getElementById("viewLinkedIn").innerText = data.linkedin || "-";
+    document.getElementById("viewGithub").innerText = data.github || "-";
+    document.getElementById("viewBio").innerText = data.bio || "-";
+
+    // Pre-fill form
+    Object.keys(data).forEach(key=>{
+      if(form.elements[key] && key !== "photo"){
+        form.elements[key].value = data[key] || "";
+      }
+    });
+
+  }catch(err){
+    form.style.display="block";
+  }
+}
+
+loadProfile();
+
+function showEdit(){
+  profileView.style.display="none";
+  form.style.display="block";
+}
+
+form.addEventListener("submit", async (e)=>{
+  e.preventDefault();
+
+  const formData = new FormData(form);
+
+  try{
+    const res = await fetch("http://localhost:5000/api/profile",{
+      method:"POST",
+      headers:{ Authorization:"Bearer "+token },
+      body:formData
+    });
+
+    if(res.ok){
+      alert("Profile Updated Successfully");
+      window.location.href="dashboard.html";
+    }else{
+      alert("Error saving profile");
+    }
+
+  }catch(err){
+    alert("Server error");
+  }
+});
+</script>
+
+</body>
+</html>
