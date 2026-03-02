@@ -10,9 +10,7 @@ body {
   color: #fff;
   overflow-x: hidden;
 }
-html {
-  scroll-behavior: smooth;
-}
+
 /* NAVBAR */
 .navbar {
   display: flex;
