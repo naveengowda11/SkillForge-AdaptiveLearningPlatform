@@ -86,43 +86,17 @@ button{
 button:hover{
   transform:scale(1.05);
 }
-
-/* SEARCH INPUT (small addition, no layout break) */
-#searchInput{
-  padding:8px 12px;
-  border-radius:8px;
-  border:none;
-  outline:none;
-  background:rgba(255,255,255,0.08);
-  color:white;
-}
-#searchInput::placeholder{
-  color:#94a3b8;
-}
 </style>
 </head>
 
 <body>
 
 <div class="container">
-<div class="header">
-  <h1>Explore AI Courses</h1>
-  <button onclick="window.location.href='dashboard.html'">← Back</button>
-</div>
 
-<!-- CENTER SEARCH BAR -->
-<div style="display:flex; justify-content:center; margin-bottom:40px;">
-  <input type="text" id="searchInput" placeholder="Search courses..."
-    style="
-      padding:10px 16px;
-      border-radius:10px;
-      border:none;
-      outline:none;
-      width:300px;
-      background:rgba(255,255,255,0.08);
-      color:white;
-    ">
-</div>
+  <div class="header">
+    <h1>Explore AI Courses</h1>
+    <button onclick="window.location.href='dashboard.html'">← Back</button>
+  </div>
 
   <div class="course-grid">
 
@@ -164,10 +138,6 @@ button:hover{
 
   </div>
 
-  <p id="noResults" style="display:none; margin-top:20px; opacity:0.7;">
-    No courses found.
-  </p>
-
 </div>
 
 <script>
@@ -187,34 +157,6 @@ if(localStorage.getItem("theme") === "light"){
 function enrollCourse(courseName){
   alert("You enrolled in: " + courseName + "\n\nBackend integration coming in Phase 2.");
 }
-
-// 🔎 SEARCH FUNCTIONALITY (added only)
-const searchInput = document.getElementById("searchInput");
-const courseCards = document.querySelectorAll(".course-card");
-const noResults = document.getElementById("noResults");
-
-searchInput.addEventListener("keyup", function () {
-  const query = searchInput.value.toLowerCase();
-  let visibleCount = 0;
-
-  courseCards.forEach(card => {
-    const title = card.querySelector("h3").innerText.toLowerCase();
-
-    if (title.includes(query)) {
-      card.style.display = "block";
-      visibleCount++;
-    } else {
-      card.style.display = "none";
-    }
-  });
-
-  if (visibleCount === 0) {
-    noResults.style.display = "block";
-  } else {
-    noResults.style.display = "none";
-  }
-});
-
 </script>
 
 </body>
