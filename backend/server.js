@@ -62,7 +62,17 @@ CREATE TABLE IF NOT EXISTS profiles (
   FOREIGN KEY(user_id) REFERENCES users(id)
 )
 `);
-
+db.run(`
+CREATE TABLE IF NOT EXISTS test_results (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  user_id INTEGER,
+  score INTEGER,
+  total INTEGER,
+  weakest_domain TEXT,
+  date TEXT,
+  FOREIGN KEY(user_id) REFERENCES users(id)
+)
+`);
 // ================= FILE UPLOAD =================
 
 const storage = multer.diskStorage({
@@ -225,6 +235,27 @@ app.post("/api/profile", upload.single("photo"), (req, res) => {
     if(err) return res.status(500).json({message:"Error saving profile"});
     res.json({message:"Profile saved successfully"});
   });
+});
+app.post("/api/save-test-result", (req, res) => {
+
+  const token = req.headers.authorization?.split(" ")[1];
+  if (!token) return res.status(401).json({ message: "Unauthorized" });
+
+  const decoded = jwt.verify(token, SECRET_KEY);
+  const userId = decoded.id;
+
+  const { score, total, weakest_domain } = req.body;
+
+  const date = new Date().toISOString();
+
+  db.run(
+    "INSERT INTO test_results (user_id, score, total, weakest_domain, date) VALUES (?, ?, ?, ?, ?)",
+    [userId, score, total, weakest_domain, date],
+    function(err){
+      if(err) return res.status(500).json({message:"Error saving result"});
+      res.json({message:"Result saved"});
+    }
+  );
 });
 
 // ================= GET PROFILE =================

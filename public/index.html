@@ -14,15 +14,14 @@
     <div class="logo">SkillForge</div>
     <nav>
       <ul class="nav-links">
-        <li><a href="#">Features</a></li>
-        <li><a href="#">How It Works</a></li>
-        <li><a href="#">Courses</a></li>
-       
+        <li><a href="#features">Features</a></li>
+        <li><a href="#how-it-works">How It Works</a></li>
+        <li><a href="login.html">Courses</a></li>
       </ul>
     </nav>
     <button class="login-btn" onclick="window.location.href='login.html'">
-  Login
-</button>
+      Login
+    </button>
   </header>
 
   <!-- HERO SECTION -->
@@ -39,8 +38,12 @@
       </p>
 
       <div class="hero-buttons">
-        <button class="primary-btn">View Tour</button>
-        <button class="secondary-btn">Full Courses</button>
+        <button class="primary-btn" onclick="scrollToSection('how-it-works')">
+          View Tour
+        </button>
+        <button class="secondary-btn" onclick="window.location.href='login.html'">
+          Full Courses
+        </button>
       </div>
     </div>
 
@@ -50,7 +53,7 @@
   </section>
 
   <!-- FEATURES -->
-  <section class="features">
+  <section id="features" class="features">
     <h2>Get Started</h2>
 
     <div class="cards">
@@ -73,6 +76,45 @@
       </div>
     </div>
   </section>
+
+  <!-- HOW IT WORKS (New Section Only For Scroll) -->
+  <section id="how-it-works" class="features">
+    <h2>How It Works</h2>
+
+    <div class="cards">
+      <div class="card">
+        <div class="icon">📝</div>
+        <h3>Create Account</h3>
+        <p>
+          Sign up securely with email verification and start building your AI learning profile.
+        </p>
+      </div>
+
+      <div class="card">
+        <div class="icon">🧠</div>
+        <h3>Take Adaptive Test</h3>
+        <p>
+          The AI evaluates your strengths across ML, DL, NLP, Math and Coding dynamically.
+        </p>
+      </div>
+
+      <div class="card">
+        <div class="icon">📈</div>
+        <h3>Get Personalized Path</h3>
+        <p>
+          Based on your performance, SkillForge recommends the right difficulty courses.
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <script>
+    function scrollToSection(id){
+      document.getElementById(id).scrollIntoView({
+        behavior: "smooth"
+      });
+    }
+  </script>
 
   <script src="script.js"></script>
 </body>

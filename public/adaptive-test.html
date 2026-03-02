@@ -9,46 +9,110 @@
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
 <style>
-*{margin:0;padding:0;box-sizing:border-box;font-family:'Inter',sans-serif}
+*{
+  margin:0;
+  padding:0;
+  box-sizing:border-box;
+  font-family:'Inter',sans-serif;
+}
 
 body{
   background: radial-gradient(circle at 20% 20%, #0f172a, #020617);
   color:white;
   min-height:100vh;
-  padding:40px;
-}
-
-body.light-mode{
-  background:#f1f5f9;
-  color:#0f172a;
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  padding:30px;
 }
 
 .container{
-  max-width:800px;
+  width:100%;
+  max-width:750px;
+}
+.badge-circle{
+  width:90px;
+  height:90px;
+  border-radius:50%;
+  background:linear-gradient(90deg,#06b6d4,#3b82f6);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-size:40px;
   margin:auto;
+  animation:pop 0.6s ease;
 }
 
+@keyframes pop{
+  0%{transform:scale(0)}
+  70%{transform:scale(1.2)}
+  100%{transform:scale(1)}
+}
+h1{
+  margin-bottom:25px;
+  text-align:center;
+}
+
+/* Progress Bar */
+.progress-bar{
+  width:100%;
+  height:8px;
+  background:rgba(255,255,255,0.1);
+  border-radius:10px;
+  overflow:hidden;
+  margin-bottom:30px;
+}
+
+#progressFill{
+  height:100%;
+  width:0%;
+  background:linear-gradient(90deg,#06b6d4,#3b82f6);
+  transition:0.4s ease;
+}
+
+/* Question Box */
 .question-box{
-  background:rgba(255,255,255,0.05);
-  padding:30px;
-  border-radius:20px;
-  margin-bottom:20px;
+  background:rgba(255,255,255,0.06);
+  padding:35px;
+  border-radius:25px;
+  backdrop-filter:blur(15px);
+  box-shadow:0 0 40px rgba(59,130,246,0.2);
+  animation:fadeIn 0.4s ease;
 }
 
 .options label{
   display:block;
-  margin:8px 0;
+  margin:15px 0;
+  padding:12px;
+  border-radius:12px;
+  background:rgba(255,255,255,0.05);
   cursor:pointer;
+  transition:0.3s;
+}
+
+.options label:hover{
+  background:rgba(59,130,246,0.25);
+}
+
+.options input{
+  margin-right:10px;
 }
 
 button{
-  margin-top:20px;
-  padding:10px 18px;
+  margin-top:25px;
+  padding:12px 25px;
   border:none;
-  border-radius:8px;
+  border-radius:12px;
   background:linear-gradient(90deg,#06b6d4,#3b82f6);
   color:white;
+  font-weight:600;
   cursor:pointer;
+  transition:0.3s;
+}
+
+button:hover{
+  transform:scale(1.05);
+  box-shadow:0 0 20px rgba(6,182,212,0.6);
 }
 
 .result-box{
@@ -58,6 +122,14 @@ button{
 
 canvas{
   margin-top:30px;
+  background:rgba(255,255,255,0.05);
+  padding:20px;
+  border-radius:20px;
+}
+
+@keyframes fadeIn{
+  from{opacity:0; transform:translateY(10px);}
+  to{opacity:1; transform:translateY(0);}
 }
 </style>
 </head>
@@ -68,16 +140,21 @@ canvas{
 
 <h1>Adaptive Skill Assessment</h1>
 
+<div class="progress-bar">
+  <div id="progressFill"></div>
+</div>
+
 <div id="testArea"></div>
 
-<button id="submitBtn">Submit Test</button>
+<button id="nextBtn">Next Question</button>
 
 <div class="result-box" id="resultBox">
+
+</div>
   <h2>Your Performance</h2>
   <p id="scoreText"></p>
-
+<p id="recommendationText" style="margin-top:15px; font-weight:600;"></p>
   <canvas id="barChart"></canvas>
-  <canvas id="radarChart"></canvas>
 
   <button onclick="window.location.href='dashboard.html'">
     Back to Dashboard
@@ -88,19 +165,13 @@ canvas{
 
 <script>
 
-// 🔐 PAGE PROTECTION
+// 🔐 Auth Protection
 const token = localStorage.getItem("token");
 if(!token){
   window.location.href="index.html";
 }
 
-// 🌙 THEME
-if(localStorage.getItem("theme")==="light"){
-  document.body.classList.add("light-mode");
-}
-
-// ================= QUESTIONS =================
-
+// Questions
 const questions = [
 {q:"What is supervised learning?", options:["Learning without labels","Learning with labeled data","Random guessing","None"], answer:1, domain:"ML"},
 {q:"Activation function used in hidden layers?", options:["ReLU","Linear","Softmax","None"], answer:0, domain:"DL"},
@@ -114,62 +185,124 @@ const questions = [
 {q:"Epoch in training means?", options:["One full pass","Half pass","Error","None"], answer:0, domain:"DL"}
 ];
 
-// ================= RENDER QUESTIONS =================
+let currentQuestion = 0;
+let score = 0;
+let userAnswers = [];
 
 const testArea = document.getElementById("testArea");
+const nextBtn = document.getElementById("nextBtn");
 
-questions.forEach((item,index)=>{
-  const box = document.createElement("div");
-  box.className="question-box";
+function showQuestion(){
+  const item = questions[currentQuestion];
 
-  let optionsHTML="";
+  let optionsHTML = "";
   item.options.forEach((opt,i)=>{
-    optionsHTML+=`
+    optionsHTML += `
       <label>
-        <input type="radio" name="q${index}" value="${i}">
+        <input type="radio" name="option" value="${i}">
         ${opt}
       </label>
     `;
   });
 
-  box.innerHTML=`
-    <h3>Q${index+1}. ${item.q}</h3>
-    <div class="options">${optionsHTML}</div>
+  testArea.innerHTML = `
+    <div class="question-box">
+      <h3>Question ${currentQuestion+1} of ${questions.length}</h3>
+      <p style="margin:15px 0;">${item.q}</p>
+      <div class="options">${optionsHTML}</div>
+    </div>
   `;
 
-  testArea.appendChild(box);
+  document.getElementById("progressFill").style.width =
+    ((currentQuestion)/questions.length)*100 + "%";
+
+  if(currentQuestion === questions.length - 1){
+    nextBtn.innerText = "Submit Test";
+  }
+}
+
+showQuestion();
+
+nextBtn.addEventListener("click",()=>{
+
+  const selected = document.querySelector("input[name='option']:checked");
+  if(!selected){
+    alert("Please select an option.");
+    return;
+  }
+
+  const selectedValue = parseInt(selected.value);
+  userAnswers.push(selectedValue);
+
+  if(selectedValue === questions[currentQuestion].answer){
+    score++;
+  }
+
+  currentQuestion++;
+
+  if(currentQuestion < questions.length){
+    showQuestion();
+  } else {
+    showResults();
+  }
 });
 
-// ================= EVALUATION =================
+async function showResults(){
 
-document.getElementById("submitBtn").addEventListener("click",()=>{
+  testArea.style.display="none";
+  nextBtn.style.display="none";
 
-  let score=0;
-
-  const domainScores={
-    ML:0, DL:0, NLP:0, Math:0, Coding:0
-  };
+  const domainScores={ ML:0, DL:0, NLP:0, Math:0, Coding:0 };
 
   questions.forEach((item,index)=>{
-    const selected=document.querySelector(`input[name="q${index}"]:checked`);
-    if(selected && parseInt(selected.value)===item.answer){
-      score++;
+    if(userAnswers[index] === item.answer){
       domainScores[item.domain]++;
     }
   });
 
-  showResults(score,domainScores);
-});
+  // Find weakest domain
+  let weakestDomain = Object.keys(domainScores).reduce((a,b)=>
+    domainScores[a] < domainScores[b] ? a : b
+  );
 
-// ================= RESULT SCREEN =================
-
-function showResults(score,domainScores){
-
+  document.getElementById("progressFill").style.width="100%";
   document.getElementById("resultBox").style.display="block";
-  document.getElementById("submitBtn").style.display="none";
+  document.getElementById("successBadge").style.display="block";
 
   document.getElementById("scoreText").innerText =
-    "You scored "+score+" / 10";
+    "You scored "+score+" / "+questions.length;
+
+  // Recommendation Mapping
+  const recommendationMap = {
+    ML: "Machine Learning Foundations",
+    DL: "Deep Learning Mastery",
+    NLP: "Natural Language Processing",
+    Math: "Mathematics for AI",
+    Coding: "Python for AI Developers"
+  };
+
+  document.getElementById("recommendationText").innerText =
+    "Recommended Course: " + recommendationMap[weakestDomain];
+
+  // Save to Database
+  const token = localStorage.getItem("token");
+
+  try{
+    await fetch("http://localhost:5000/api/save-test-result",{
+      method:"POST",
+      headers:{
+        "Content-Type":"application/json",
+        Authorization:"Bearer "+token
+      },
+      body: JSON.stringify({
+        score: score,
+        total: questions.length,
+        weakest_domain: weakestDomain
+      })
+    });
+  }catch(err){
+    console.log("Result save failed");
+  }
 
   // Bar Chart
   new Chart(document.getElementById("barChart"),{
@@ -177,24 +310,12 @@ function showResults(score,domainScores){
     data:{
       labels:Object.keys(domainScores),
       datasets:[{
-        label:"Correct Answers",
         data:Object.values(domainScores),
         backgroundColor:"rgba(6,182,212,0.6)"
       }]
-    }
-  });
-
-  // Radar Chart
-  new Chart(document.getElementById("radarChart"),{
-    type:"radar",
-    data:{
-      labels:Object.keys(domainScores),
-      datasets:[{
-        label:"Skill Distribution",
-        data:Object.values(domainScores),
-        borderColor:"#06b6d4",
-        backgroundColor:"rgba(6,182,212,0.2)"
-      }]
+    },
+    options:{
+      plugins:{ legend:{display:false} }
     }
   });
 }
