@@ -74,7 +74,7 @@ This project is built as a production-style web application with authentication,
 ### 1️⃣ Clone Repository
 
 
-git clone https://github.com/yourusername/SkillForge.git
+git clone https://github.com/yourusername/SkillForge-AdaptiveLearningPlatform.git
 
 
 ### 2️⃣ Navigate to Project
