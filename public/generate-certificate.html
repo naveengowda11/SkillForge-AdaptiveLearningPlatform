@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+
+<html>
+<head>
+<title>Certificate</title>
+
+<style>
+body{display:flex;justify-content:center;align-items:center;height:100vh;background:#eee;}
+canvas{border:1px solid #ccc;}
+</style>
+
+</head>
+
+<body>
+
+<canvas id="certCanvas" width="1200" height="850"></canvas>
+
+<script>
+
+const canvas = document.getElementById("certCanvas");
+const ctx = canvas.getContext("2d");
+
+const name = localStorage.getItem("name");
+const course = localStorage.getItem("selectedCourse");
+
+const date = new Date().toLocaleDateString();
+
+const img = new Image();
+img.src="assets/certificate-template.png";
+
+img.onload=function(){
+
+ctx.drawImage(img,0,0,1200,850);
+
+ctx.font="50px serif";
+ctx.fillStyle="#222";
+ctx.textAlign="center";
+
+ctx.fillText(name,600,420);
+
+ctx.font="40px serif";
+ctx.fillText(course,600,520);
+
+ctx.font="28px serif";
+ctx.fillText(date,600,580);
+
+};
+
+</script>
+
+</body>
+</html>
