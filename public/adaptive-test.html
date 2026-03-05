@@ -1,329 +1,480 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
 <title>SkillForge Adaptive Test</title>
 
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/remixicon@3.5.0/fonts/remixicon.css" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
 <style>
+
 *{
-  margin:0;
-  padding:0;
-  box-sizing:border-box;
-  font-family:'Inter',sans-serif;
+margin:0;
+padding:0;
+box-sizing:border-box;
+font-family:Inter,sans-serif;
 }
 
+/* PAGE */
+
 body{
-  background: radial-gradient(circle at 20% 20%, #0f172a, #020617);
-  color:white;
-  min-height:100vh;
-  display:flex;
-  justify-content:center;
-  align-items:center;
-  padding:30px;
+background:linear-gradient(135deg,#c6c4ff,#98c5ff);
+height:100vh;
+display:flex;
+align-items:center;
+justify-content:center;
 }
 
 .container{
-  width:100%;
-  max-width:750px;
-}
-.badge-circle{
-  width:90px;
-  height:90px;
-  border-radius:50%;
-  background:linear-gradient(90deg,#06b6d4,#3b82f6);
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  font-size:40px;
-  margin:auto;
-  animation:pop 0.6s ease;
+width:95%;
+height:92vh;
+background:#f6f7fb;
+border-radius:28px;
+display:flex;
+overflow:hidden;
 }
 
-@keyframes pop{
-  0%{transform:scale(0)}
-  70%{transform:scale(1.2)}
-  100%{transform:scale(1)}
-}
-h1{
-  margin-bottom:25px;
-  text-align:center;
+/* SIDEBAR */
+
+.sidebar{
+width:80px;
+background:#fff;
+display:flex;
+flex-direction:column;
+align-items:center;
+padding-top:20px;
+gap:30px;
 }
 
-/* Progress Bar */
+.sidebar button{
+width:45px;
+height:45px;
+border:none;
+border-radius:12px;
+background:#f0f2f8;
+cursor:pointer;
+}
+
+.sidebar button i{
+font-size:20px;
+color:#444;
+}
+
+.sidebar button.active{
+background:#111;
+}
+
+.sidebar button.active i{
+color:#fff;
+}
+
+/* CONTENT */
+
+.content{
+flex:1;
+padding:40px;
+overflow:auto;
+}
+
+.card{
+background:white;
+padding:30px;
+border-radius:20px;
+box-shadow:0 8px 20px rgba(0,0,0,0.05);
+max-width:700px;
+}
+
+/* TIMER */
+
+.timer{
+font-weight:600;
+margin-bottom:10px;
+color:#444;
+}
+
+/* PROGRESS */
+
 .progress-bar{
-  width:100%;
-  height:8px;
-  background:rgba(255,255,255,0.1);
-  border-radius:10px;
-  overflow:hidden;
-  margin-bottom:30px;
+width:100%;
+height:8px;
+background:#eee;
+border-radius:10px;
+overflow:hidden;
+margin-bottom:20px;
 }
 
 #progressFill{
-  height:100%;
-  width:0%;
-  background:linear-gradient(90deg,#06b6d4,#3b82f6);
-  transition:0.4s ease;
+height:100%;
+width:0%;
+background:#6c7cff;
+transition:0.3s;
 }
 
-/* Question Box */
-.question-box{
-  background:rgba(255,255,255,0.06);
-  padding:35px;
-  border-radius:25px;
-  backdrop-filter:blur(15px);
-  box-shadow:0 0 40px rgba(59,130,246,0.2);
-  animation:fadeIn 0.4s ease;
-}
+/* OPTIONS */
 
 .options label{
-  display:block;
-  margin:15px 0;
-  padding:12px;
-  border-radius:12px;
-  background:rgba(255,255,255,0.05);
-  cursor:pointer;
-  transition:0.3s;
+display:block;
+margin:10px 0;
+padding:12px;
+border-radius:10px;
+background:#f3f4ff;
+cursor:pointer;
 }
 
 .options label:hover{
-  background:rgba(59,130,246,0.25);
+background:#e6e8ff;
 }
 
-.options input{
-  margin-right:10px;
-}
-
-button{
-  margin-top:25px;
-  padding:12px 25px;
-  border:none;
-  border-radius:12px;
-  background:linear-gradient(90deg,#06b6d4,#3b82f6);
-  color:white;
-  font-weight:600;
-  cursor:pointer;
-  transition:0.3s;
-}
-
-button:hover{
-  transform:scale(1.05);
-  box-shadow:0 0 20px rgba(6,182,212,0.6);
+button.next-btn{
+margin-top:20px;
+background:#6c7cff;
+color:white;
+border:none;
+padding:12px 20px;
+border-radius:10px;
+cursor:pointer;
 }
 
 .result-box{
-  display:none;
-  margin-top:30px;
+display:none;
+margin-top:20px;
 }
 
 canvas{
-  margin-top:30px;
-  background:rgba(255,255,255,0.05);
-  padding:20px;
-  border-radius:20px;
+margin-top:20px;
+background:#f3f4ff;
+padding:20px;
+border-radius:10px;
 }
 
-@keyframes fadeIn{
-  from{opacity:0; transform:translateY(10px);}
-  to{opacity:1; transform:translateY(0);}
-}
 </style>
+
 </head>
 
 <body>
 
 <div class="container">
 
-<h1>Adaptive Skill Assessment</h1>
+<div class="sidebar">
+
+<button onclick="location.href='dashboard.html'">
+<i class="ri-home-4-line"></i>
+</button>
+
+<button onclick="location.href='courses.html'">
+<i class="ri-book-open-line"></i>
+</button>
+
+<button class="active">
+<i class="ri-brain-line"></i>
+</button>
+
+<button onclick="location.href='performance.html'">
+<i class="ri-bar-chart-line"></i>
+</button>
+
+<button onclick="location.href='settings.html'">
+<i class="ri-settings-3-line"></i>
+</button>
+
+</div>
+
+<div class="content">
+
+<h1 id="courseTitle">Adaptive Test</h1>
+
+<div class="card">
+
+<div class="timer">
+Time Left: <span id="timeLeft">60</span>s
+</div>
 
 <div class="progress-bar">
-  <div id="progressFill"></div>
+<div id="progressFill"></div>
 </div>
 
 <div id="testArea"></div>
 
-<button id="nextBtn">Next Question</button>
+<button class="next-btn" id="nextBtn">Next Question</button>
 
 <div class="result-box" id="resultBox">
-  <div id="successBadge" style="display:none; text-align:center; margin-bottom:20px;">
-  <div class="badge-circle">🏆</div>
+
+<h2>Your Score</h2>
+
+<p id="scoreText"></p>
+
+<canvas id="barChart"></canvas>
+
+<button class="next-btn" onclick="location.href='dashboard.html'">
+Back to Dashboard
+</button>
+
 </div>
-  <h2>Your Performance</h2>
-  <p id="scoreText"></p>
 
-  <canvas id="barChart"></canvas>
+</div>
 
-  <button onclick="window.location.href='dashboard.html'">
-    Back to Dashboard
-  </button>
 </div>
 
 </div>
 
 <script>
 
-// 🔐 Auth Protection
+/* AUTH CHECK */
+
 const token = localStorage.getItem("token");
+
 if(!token){
-  window.location.href="index.html";
+window.location.href="login.html";
 }
 
-// 🌙 THEME
-if(localStorage.getItem("theme")==="light"){
-  document.body.classList.add("light-mode");
+/* GET COURSE */
+
+const course = localStorage.getItem("testCourse") || "Machine Learning";
+
+document.getElementById("courseTitle").innerText =
+course + " Test";
+
+/* COURSE QUESTIONS */
+
+const questionBank = {
+
+"AI Fundamentals":[
+
+{q:"What is Artificial Intelligence?",options:["Machine thinking","Human thinking","Random code","None"],answer:0},
+
+{q:"Which language is most used for AI?",options:["Python","HTML","C","CSS"],answer:0},
+
+{q:"AI is mainly about?",options:["Learning from data","Hardcoding","Gaming","Design"],answer:0},
+
+{q:"Machine learning is a subset of?",options:["AI","Math","Physics","Chemistry"],answer:0}
+
+],
+
+"Machine Learning":[
+
+{q:"Supervised learning uses?",options:["Labeled data","No data","Random data","Images only"],answer:0},
+
+{q:"Overfitting means?",options:["Too complex model","Too simple model","Perfect model","None"],answer:0},
+
+{q:"ML algorithm example?",options:["Linear regression","HTML","CSS","Bootstrap"],answer:0},
+
+{q:"Training data is used to?",options:["Teach model","Delete data","Run server","None"],answer:0}
+
+]
+
+};
+
+const questions = questionBank[course];
+
+
+/* TEST VARIABLES */
+
+let currentQuestion=0;
+let score=0;
+let userAnswers=[];
+
+let timeLeft=60;
+let timer;
+
+/* ELEMENTS */
+
+const testArea=document.getElementById("testArea");
+const nextBtn=document.getElementById("nextBtn");
+
+
+/* TIMER */
+
+function startTimer(){
+
+clearInterval(timer);
+
+timeLeft=60;
+
+document.getElementById("timeLeft").innerText=timeLeft;
+
+timer=setInterval(()=>{
+
+timeLeft--;
+
+document.getElementById("timeLeft").innerText=timeLeft;
+
+if(timeLeft<=0){
+
+clearInterval(timer);
+
+autoNext();
+
 }
-// Questions
-const questions = [
-{q:"What is supervised learning?", options:["Learning without labels","Learning with labeled data","Random guessing","None"], answer:1, domain:"ML"},
-{q:"Activation function used in hidden layers?", options:["ReLU","Linear","Softmax","None"], answer:0, domain:"DL"},
-{q:"What is overfitting?", options:["High bias","High variance","Under training","None"], answer:1, domain:"ML"},
-{q:"What does NLP stand for?", options:["Natural Logic Processing","Neural Language Program","Natural Language Processing","None"], answer:2, domain:"NLP"},
-{q:"Gradient descent minimizes?", options:["Loss function","Accuracy","Data","None"], answer:0, domain:"Math"},
-{q:"CNN mainly used for?", options:["Text","Images","Audio","None"], answer:1, domain:"DL"},
-{q:"Tokenizer used in NLP?", options:["Split text","Remove image","Encrypt","None"], answer:0, domain:"NLP"},
-{q:"What is derivative?", options:["Rate of change","Area","Sum","None"], answer:0, domain:"Math"},
-{q:"Python used for AI because?", options:["Simple syntax","Low memory","Game dev","None"], answer:0, domain:"Coding"},
-{q:"Epoch in training means?", options:["One full pass","Half pass","Error","None"], answer:0, domain:"DL"}
-];
 
-let currentQuestion = 0;
-let score = 0;
-let userAnswers = [];
+},1000);
 
-const testArea = document.getElementById("testArea");
-const nextBtn = document.getElementById("nextBtn");
+}
+
+
+/* SHOW QUESTION */
 
 function showQuestion(){
-  const item = questions[currentQuestion];
 
-  let optionsHTML = "";
-  item.options.forEach((opt,i)=>{
-    optionsHTML += `
-      <label>
-        <input type="radio" name="option" value="${i}">
-        ${opt}
-      </label>
-    `;
-  });
+const q=questions[currentQuestion];
 
-  testArea.innerHTML = `
-    <div class="question-box">
-      <h3>Question ${currentQuestion+1} of ${questions.length}</h3>
-      <p style="margin:15px 0;">${item.q}</p>
-      <div class="options">${optionsHTML}</div>
-    </div>
-  `;
+let optionsHTML="";
 
-  document.getElementById("progressFill").style.width =
-    ((currentQuestion)/questions.length)*100 + "%";
+q.options.forEach((opt,i)=>{
 
-  if(currentQuestion === questions.length - 1){
-    nextBtn.innerText = "Submit Test";
-  }
+optionsHTML+=`
+<label>
+<input type="radio" name="option" value="${i}">
+${opt}
+</label>
+`;
+
+});
+
+testArea.innerHTML=`
+
+<h3>Question ${currentQuestion+1} of ${questions.length}</h3>
+
+<p style="margin:15px 0">${q.q}</p>
+
+<div class="options">
+${optionsHTML}
+</div>
+
+`;
+
+document.getElementById("progressFill").style.width=
+((currentQuestion)/questions.length)*100+"%";
+
+if(currentQuestion===questions.length-1){
+nextBtn.innerText="Submit Test";
+}
+
+startTimer();
+
 }
 
 showQuestion();
 
+
+/* NEXT BUTTON */
+
 nextBtn.addEventListener("click",()=>{
 
-  const selected = document.querySelector("input[name='option']:checked");
-  if(!selected){
-    alert("Please select an option.");
-    return;
-  }
+clearInterval(timer);
 
-  const selectedValue = parseInt(selected.value);
-  userAnswers.push(selectedValue);
+const selected=document.querySelector("input[name='option']:checked");
 
-  if(selectedValue === questions[currentQuestion].answer){
-    score++;
-  }
+if(!selected){
+alert("Please select an option");
+return;
+}
 
-  currentQuestion++;
+const value=parseInt(selected.value);
 
-  if(currentQuestion < questions.length){
-    showQuestion();
-  } else {
-    showResults();
-  }
+userAnswers.push(value);
+
+if(value===questions[currentQuestion].answer){
+score++;
+}
+
+currentQuestion++;
+
+if(currentQuestion<questions.length){
+showQuestion();
+}else{
+showResults();
+}
+
 });
+
+
+/* AUTO NEXT WHEN TIMER ENDS */
+
+function autoNext(){
+
+userAnswers.push(null);
+
+currentQuestion++;
+
+if(currentQuestion<questions.length){
+showQuestion();
+}else{
+showResults();
+}
+
+}
+
+
+/* SHOW RESULT */
 
 async function showResults(){
 
-  testArea.style.display="none";
-  nextBtn.style.display="none";
+testArea.style.display="none";
+nextBtn.style.display="none";
 
-  const domainScores={ ML:0, DL:0, NLP:0, Math:0, Coding:0 };
+document.getElementById("progressFill").style.width="100%";
 
-  questions.forEach((item,index)=>{
-    if(userAnswers[index] === item.answer){
-      domainScores[item.domain]++;
-    }
-  });
+document.getElementById("resultBox").style.display="block";
 
-  // Find weakest domain
-  let weakestDomain = Object.keys(domainScores).reduce((a,b)=>
-    domainScores[a] < domainScores[b] ? a : b
-  );
+document.getElementById("scoreText").innerText=
+"You scored "+score+" / "+questions.length;
 
-  document.getElementById("progressFill").style.width="100%";
-  document.getElementById("resultBox").style.display="block";
-  document.getElementById("successBadge").style.display="block";
+/* SAVE RESULT */
 
-  document.getElementById("scoreText").innerText =
-    "You scored "+score+" / "+questions.length;
+try{
 
-  // Recommendation Mapping
-  const recommendationMap = {
-    ML: "Machine Learning Foundations",
-    DL: "Deep Learning Mastery",
-    NLP: "Natural Language Processing",
-    Math: "Mathematics for AI",
-    Coding: "Python for AI Developers"
-  };
+await fetch("http://localhost:5000/api/save-test-result",{
 
-  document.getElementById("recommendationText").innerText =
-    "Recommended Course: " + recommendationMap[weakestDomain];
+method:"POST",
 
-  // Save to Database
-  const token = localStorage.getItem("token");
+headers:{
+"Content-Type":"application/json",
+Authorization:"Bearer "+token
+},
 
-  try{
-    await fetch("http://localhost:5000/api/save-test-result",{
-      method:"POST",
-      headers:{
-        "Content-Type":"application/json",
-        Authorization:"Bearer "+token
-      },
-      body: JSON.stringify({
-        score: score,
-        total: questions.length,
-        weakest_domain: weakestDomain
-      })
-    });
-  }catch(err){
-    console.log("Result save failed");
-  }
+body:JSON.stringify({
 
-  // Bar Chart
-  new Chart(document.getElementById("barChart"),{
-    type:"bar",
-    data:{
-      labels:Object.keys(domainScores),
-      datasets:[{
-        data:Object.values(domainScores),
-        backgroundColor:"rgba(6,182,212,0.6)"
-      }]
-    },
-    options:{
-      plugins:{ legend:{display:false} }
-    }
-  });
+score:score,
+total:questions.length,
+weakest_domain:course
+
+})
+
+});
+
+}catch(err){
+
+console.log("Save failed");
+
 }
+
+
+/* CHART */
+
+new Chart(document.getElementById("barChart"),{
+
+type:"bar",
+
+data:{
+labels:["Correct","Wrong"],
+datasets:[{
+data:[score,questions.length-score],
+backgroundColor:["#6c7cff","#ff6b6b"]
+}]
+},
+
+options:{
+plugins:{legend:{display:false}}
+}
+
+});
+
+}
+
 </script>
 
 </body>
