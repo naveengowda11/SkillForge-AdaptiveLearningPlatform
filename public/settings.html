@@ -1,170 +1,355 @@
 <!DOCTYPE html>
+
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>SkillForge Settings</title>
 
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/remixicon@3.5.0/fonts/remixicon.css" rel="stylesheet">
 
 <style>
+
 *{
-  margin:0;
-  padding:0;
-  box-sizing:border-box;
-  font-family:'Inter',sans-serif;
+margin:0;
+padding:0;
+box-sizing:border-box;
+font-family:Inter,sans-serif;
 }
 
 body{
-  background: radial-gradient(circle at 20% 20%, #0f172a, #020617);
-  color:white;
-  min-height:100vh;
-  padding:40px;
+background:linear-gradient(135deg,#c6c4ff,#98c5ff);
+height:100vh;
+display:flex;
+align-items:center;
+justify-content:center;
 }
 
-body.light-mode{
-  background:#f1f5f9;
-  color:#0f172a;
+.loading{
+position:fixed;
+top:0;
+left:0;
+width:100%;
+height:100%;
+background:#0f172a;
+display:flex;
+align-items:center;
+justify-content:center;
+color:white;
+font-size:20px;
+z-index:9999;
 }
 
 .container{
-  max-width:800px;
-  margin:auto;
+width:95%;
+height:92vh;
+background:#f6f7fb;
+border-radius:28px;
+display:flex;
+overflow:hidden;
 }
 
-.section{
-  background:rgba(255,255,255,0.05);
-  backdrop-filter:blur(10px);
-  padding:25px;
-  border-radius:20px;
-  margin-bottom:25px;
+.sidebar{
+width:80px;
+background:#fff;
+display:flex;
+flex-direction:column;
+align-items:center;
+padding-top:20px;
+gap:30px;
 }
 
-.section h2{
-  margin-bottom:15px;
+.sidebar button{
+width:45px;
+height:45px;
+border:none;
+border-radius:12px;
+background:#f0f2f8;
+display:flex;
+align-items:center;
+justify-content:center;
+cursor:pointer;
 }
 
-button{
-  padding:10px 18px;
-  border:none;
-  border-radius:8px;
-  background:linear-gradient(90deg,#06b6d4,#3b82f6);
-  color:white;
-  cursor:pointer;
-  transition:0.3s;
+.sidebar button i{
+font-size:20px;
+color:#444;
 }
 
-button:hover{
-  transform:scale(1.05);
+.sidebar button.active{
+background:#111;
 }
 
-.logout-btn{
-  background:linear-gradient(90deg,#ef4444,#f87171);
+.sidebar button.active i{
+color:#fff;
 }
 
-input, textarea{
-  width:100%;
-  padding:10px;
-  margin-top:10px;
-  border-radius:8px;
-  border:none;
+.content{
+flex:1;
+padding:40px;
+overflow:auto;
+}
+
+.settings-card{
+background:white;
+padding:30px;
+border-radius:20px;
+box-shadow:0 8px 20px rgba(0,0,0,0.05);
+margin-bottom:25px;
+max-width:600px;
+}
+
+.settings-card h3{
+margin-bottom:15px;
+}
+
+.settings-card p{
+margin-bottom:10px;
+}
+
+.btn{
+background:#6c7cff;
+color:white;
+border:none;
+padding:10px 16px;
+border-radius:8px;
+cursor:pointer;
+margin-top:10px;
+}
+
+.danger{
+background:#ff4d4d;
 }
 
 textarea{
-  resize:none;
-  height:100px;
+width:100%;
+padding:10px;
+border-radius:8px;
+border:1px solid #ddd;
+margin-top:10px;
 }
+
 </style>
+
 </head>
 
 <body>
 
+<div id="loading" class="loading">Loading settings...</div>
+
 <div class="container">
 
-  <h1 style="margin-bottom:30px;">Settings</h1>
+<div class="sidebar">
 
-  <!-- ACCOUNT INFO -->
-  <div class="section">
-    <h2>Account Information</h2>
-    <p><strong>Name:</strong> <span id="accountName"></span></p>
-    <p><strong>Email:</strong> <span id="accountEmail"></span></p>
-  </div>
+<button onclick="location.href='dashboard.html'">
+<i class="ri-home-4-line"></i>
+</button>
 
-  <!-- APPEARANCE -->
-  <div class="section">
-    <h2>Appearance</h2>
-    <button id="themeToggle">Toggle Dark / Light Mode</button>
-  </div>
+<button onclick="location.href='courses.html'">
+<i class="ri-book-open-line"></i>
+</button>
 
-  <!-- FEEDBACK -->
-  <div class="section">
-    <h2>Send Feedback</h2>
-    <textarea id="feedbackText" placeholder="Write your feedback..."></textarea>
-    <button onclick="submitFeedback()">Submit Feedback</button>
-  </div>
+<button onclick="location.href='adaptive-test.html'">
+<i class="ri-brain-line"></i>
+</button>
 
-  <!-- SECURITY -->
-  <div class="section">
-    <h2>Security</h2>
-    <button class="logout-btn" onclick="logout()">Logout</button>
-  </div>
+<button onclick="location.href='performance.html'">
+<i class="ri-bar-chart-line"></i>
+</button>
 
-  <button onclick="window.location.href='dashboard.html'">
-    ← Back to Dashboard
-  </button>
+<button onclick="location.href='files.html'">
+<i class="ri-file-text-line"></i>
+</button>
+
+<button onclick="location.href='certificates.html'">
+<i class="ri-award-line"></i>
+</button>
+
+<button onclick="location.href='messages.html'">
+<i class="ri-message-2-line"></i>
+</button>
+
+<button class="active">
+<i class="ri-settings-3-line"></i>
+</button>
+
+</div>
+
+<div class="content">
+
+<h1 style="margin-bottom:30px;">Settings</h1>
+
+<div class="settings-card">
+
+<h3>Account Information</h3>
+
+<p><b>Email:</b> <span id="userEmail">Loading...</span></p>
+
+<p><b>Username:</b> <span id="username">Loading...</span></p>
+
+<button class="btn" onclick="location.href='profile.html'">
+Edit Profile
+</button>
+
+</div>
+
+<div class="settings-card">
+
+<h3>Theme</h3>
+
+<p>Switch between light and dark theme</p>
+
+<button class="btn" onclick="toggleTheme()">
+Toggle Theme
+</button>
+
+</div>
+
+<div class="settings-card">
+
+<h3>Send Feedback</h3>
+
+<p>Tell us how we can improve SkillForge.</p>
+
+<textarea id="feedbackText" rows="4" placeholder="Write your feedback here..."></textarea>
+
+<button class="btn" onclick="sendFeedback()">Submit Feedback</button>
+
+</div>
+
+<div class="settings-card">
+
+<h3>Account Actions</h3>
+
+<button class="btn danger" onclick="deleteAccount()">
+Delete Account
+</button>
+
+<button class="btn" style="margin-left:10px;" onclick="logout()">
+Logout
+</button>
+
+</div>
+
+</div>
 
 </div>
 
 <script>
 
-// 🔐 PROTECTION
 const token = localStorage.getItem("token");
+const userId = localStorage.getItem("userId");
+
 if(!token){
-  window.location.href="index.html";
+window.location.href="login.html";
 }
 
-// 👤 LOAD USER INFO
-document.getElementById("accountName").innerText =
-  localStorage.getItem("name") || "User";
+/* LOAD USER INFO */
 
-document.getElementById("accountEmail").innerText =
-  localStorage.getItem("email") || "Not Available";
+async function loadUser(){
 
-// 🌙 LOAD SAVED THEME
-const themeToggle = document.getElementById("themeToggle");
-
-if(localStorage.getItem("theme")==="light"){
-  document.body.classList.add("light-mode");
-}
-
-themeToggle.addEventListener("click",()=>{
-  document.body.classList.toggle("light-mode");
-
-  if(document.body.classList.contains("light-mode")){
-    localStorage.setItem("theme","light");
-  }else{
-    localStorage.setItem("theme","dark");
-  }
+const res = await fetch("http://localhost:5000/api/profile",{
+headers:{Authorization:"Bearer "+token}
 });
 
-// 📝 FEEDBACK (Frontend Only)
-function submitFeedback(){
-  const text = document.getElementById("feedbackText").value.trim();
+const data = await res.json();
 
-  if(!text){
-    alert("Please enter feedback before submitting.");
-    return;
-  }
+document.getElementById("userEmail").innerText = data.email;
+document.getElementById("username").innerText = data.username || "Not set";
 
-  alert("Thanks for your feedback! 🚀\n\nBackend integration coming next phase.");
-  document.getElementById("feedbackText").value="";
 }
 
-// 🔓 LOGOUT
+/* THEME SYSTEM */
+
+function toggleTheme(){
+
+const theme = localStorage.getItem("theme");
+
+if(theme==="dark"){
+localStorage.setItem("theme","light");
+}else{
+localStorage.setItem("theme","dark");
+}
+
+location.reload();
+
+}
+
+/* APPLY THEME */
+
+if(localStorage.getItem("theme")==="dark"){
+
+document.body.style.background="#111";
+document.body.style.color="white";
+
+}
+
+/* SEND FEEDBACK */
+
+async function sendFeedback(){
+
+const text = document.getElementById("feedbackText").value;
+
+if(!text){
+alert("Please write feedback");
+return;
+}
+
+await fetch("http://localhost:5000/api/feedback",{
+
+method:"POST",
+
+headers:{
+"Content-Type":"application/json",
+Authorization:"Bearer "+token
+},
+
+body:JSON.stringify({feedback:text})
+
+});
+
+alert("Feedback submitted");
+
+document.getElementById("feedbackText").value="";
+
+}
+
+/* LOGOUT */
+
 function logout(){
-  localStorage.clear();
-  window.location.href="index.html";
+
+localStorage.clear();
+
+window.location.href="login.html";
+
 }
+
+/* DELETE ACCOUNT */
+
+async function deleteAccount(){
+
+if(!confirm("Are you sure you want to delete your account?")) return;
+
+await fetch("http://localhost:5000/api/delete-account",{
+
+method:"POST",
+
+headers:{
+Authorization:"Bearer "+token
+}
+
+});
+
+localStorage.clear();
+
+window.location.href="signup.html";
+
+}
+
+/* INIT */
+
+loadUser();
+
+document.getElementById("loading").style.display="none";
 
 </script>
 
