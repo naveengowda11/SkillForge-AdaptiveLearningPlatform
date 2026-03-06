@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+
+<meta charset="UTF-8">
+<title>SkillForge Admin Analytics</title>
+
+<link href="https://cdn.jsdelivr.net/npm/remixicon@3.5.0/fonts/remixicon.css" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<style>
+
+*{
+margin:0;
+padding:0;
+box-sizing:border-box;
+font-family:Inter,sans-serif;
+}
+
+body{
+background:linear-gradient(135deg,#c6c4ff,#98c5ff);
+height:100vh;
+display:flex;
+align-items:center;
+justify-content:center;
+}
+
+.container{
+width:95%;
+height:92vh;
+background:#f6f7fb;
+border-radius:28px;
+display:flex;
+overflow:hidden;
+}
+
+/* SIDEBAR */
+
+.sidebar{
+width:80px;
+background:#fff;
+display:flex;
+flex-direction:column;
+align-items:center;
+padding-top:20px;
+gap:30px;
+}
+
+.sidebar button{
+width:45px;
+height:45px;
+border:none;
+border-radius:12px;
+background:#f0f2f8;
+display:flex;
+align-items:center;
+justify-content:center;
+cursor:pointer;
+}
+
+.sidebar button i{
+font-size:20px;
+color:#444;
+}
+
+.sidebar button.active{
+background:#111;
+}
+
+.sidebar button.active i{
+color:white;
+}
+
+/* CONTENT */
+
+.content{
+flex:1;
+padding:30px;
+overflow:auto;
+}
+
+.grid{
+display:grid;
+grid-template-columns:1fr 1fr;
+gap:20px;
+}
+
+.card{
+background:#fff;
+padding:25px;
+border-radius:18px;
+box-shadow:0 8px 20px rgba(0,0,0,0.05);
+}
+
+.card h3{
+margin-bottom:10px;
+}
+
+</style>
+</head>
+
+<body>
+
+<div class="container">
+
+<!-- SIDEBAR -->
+
+<div class="sidebar">
+
+<button onclick="location.href='admin-dashboard.html'">
+<i class="ri-dashboard-line"></i>
+</button>
+
+<button onclick="location.href='admin-courses.html'">
+<i class="ri-book-open-line"></i>
+</button>
+
+<button onclick="location.href='admin-quiz.html'">
+<i class="ri-question-line"></i>
+</button>
+
+<button onclick="location.href='admin-feedback.html'">
+<i class="ri-chat-3-line"></i>
+</button>
+
+<button class="active">
+<i class="ri-bar-chart-line"></i>
+</button>
+
+</div>
+
+<!-- CONTENT -->
+
+<div class="content">
+
+<h1 style="margin-bottom:25px;">Admin Analytics</h1>
+
+<div class="grid">
+
+<div class="card">
+<h3>Student Growth</h3>
+<canvas id="userChart"></canvas>
+</div>
+
+<div class="card">
+<h3>Course Popularity</h3>
+<canvas id="courseChart"></canvas>
+</div>
+
+<div class="card">
+<h3>Test Performance Trend</h3>
+<canvas id="testChart"></canvas>
+</div>
+
+<div class="card">
+<h3>Most Popular Course</h3>
+<h2 id="popularCourse">Loading...</h2>
+</div>
+
+</div>
+
+</div>
+
+</div>
+
+<script>
+
+/* STUDENT GROWTH */
+
+async function loadUsers(){
+
+const res = await fetch("http://localhost:5000/api/admin/analytics/users");
+const data = await res.json();
+
+const labels = data.map(x=>x.month);
+const counts = data.map(x=>x.count);
+
+new Chart(document.getElementById("userChart"),{
+type:"line",
+data:{
+labels:labels,
+datasets:[{
+label:"New Users",
+data:counts,
+borderColor:"#6c7cff",
+backgroundColor:"#6c7cff"
+}]
+}
+});
+
+}
+
+/* COURSE POPULARITY */
+
+async function loadCourses(){
+
+const res = await fetch("http://localhost:5000/api/admin/analytics/courses");
+const data = await res.json();
+
+const labels = data.map(x=>x.course);
+const counts = data.map(x=>x.students);
+
+document.getElementById("popularCourse").innerText = labels[0];
+
+new Chart(document.getElementById("courseChart"),{
+type:"bar",
+data:{
+labels:labels,
+datasets:[{
+label:"Students",
+data:counts,
+backgroundColor:"#6c7cff"
+}]
+}
+});
+
+}
+
+/* TEST PERFORMANCE */
+
+async function loadTests(){
+
+const res = await fetch("http://localhost:5000/api/admin/analytics/tests");
+const data = await res.json();
+
+const labels = data.map(x=>x.date);
+const scores = data.map(x=>x.percentage);
+
+new Chart(document.getElementById("testChart"),{
+type:"line",
+data:{
+labels:labels,
+datasets:[{
+label:"Average %",
+data:scores,
+borderColor:"#ff6384"
+}]
+}
+});
+
+}
+
+loadUsers();
+loadCourses();
+loadTests();
+
+</script>
+
+</body>
+</html>
