@@ -216,9 +216,8 @@ Course Modules
 
 <div class="lesson">
 
-<div class="video">
-Video Lesson
-</div>
+<video id="courseVideo" controls width="100%">
+</video>
 
 <!-- MODIFIED -->
 <h2 id="courseTitle">Course Title</h2>
@@ -238,8 +237,8 @@ Some popular algorithms include Linear Regression, Decision Trees, and Neural Ne
 
 </div>
 
-<button class="btn" onclick="enrollCourse()">
-Enroll Course
+<button onclick="enrollCourse('${course.title}')">
+Enroll
 </button>
 
 <button class="btn">
@@ -318,43 +317,48 @@ document.getElementById("courseDescription").innerText =
 ENROLL COURSE
 -------------------------------- */
 
-async function enrollCourse(){
+async function enrollCourse(course){
 
-const email = localStorage.getItem("email");
+const token = localStorage.getItem("token");
 
-try{
-
-await fetch("http://localhost:5000/api/enroll-course",{
-
+const res = await fetch("http://localhost:5000/api/enroll-course",{
 method:"POST",
-
 headers:{
-"Content-Type":"application/json"
+"Content-Type":"application/json",
+Authorization:"Bearer "+token
 },
-
-body:JSON.stringify({
-email:email,
-course:course
-})
-
+body:JSON.stringify({course:course})
 });
 
-/* ADDED */
-localStorage.setItem("testCourse",course);
+const data = await res.json();
 
-alert("Enrollment successful! Check your email.");
+if(res.ok){
+alert("Enrolled successfully");
+}else{
+alert(data.message);
+}
 
-/* ADDED */
-window.location.href="adaptive-test.html";
+}
+async function loadCourseVideo(){
 
-}catch(err){
+const course = localStorage.getItem("selectedCourse");
 
-alert("Enrollment failed");
+const res = await fetch("http://localhost:5000/api/admin/courses");
+
+const courses = await res.json();
+
+const courseData = courses.find(c => c.title === course);
+
+if(courseData && courseData.video){
+
+document.getElementById("courseVideo").src =
+"http://localhost:5000/" + courseData.video;
 
 }
 
 }
 
+loadCourseVideo();
 </script>
 
 </body>
