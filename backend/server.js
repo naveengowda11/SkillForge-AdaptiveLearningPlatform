@@ -28,15 +28,17 @@ CREATE TABLE IF NOT EXISTS users(
 id INTEGER PRIMARY KEY AUTOINCREMENT,
 name TEXT,
 email TEXT UNIQUE,
-password TEXT
+password TEXT,
+created_at TEXT
 )
 `);
 db.run(`
-    CREATE TABLE IF NOT EXISTS courses(
+   CREATE TABLE IF NOT EXISTS courses(
 id INTEGER PRIMARY KEY AUTOINCREMENT,
 title TEXT,
 description TEXT,
-category TEXT
+category TEXT,
+video TEXT
 
 )`
 );
@@ -190,8 +192,8 @@ const {name,email,password}=req.body;
 const hashed=await bcrypt.hash(password,10);
 
 db.run(
-"INSERT INTO users(name,email,password) VALUES(?,?,?)",
-[name,email,hashed],
+"INSERT INTO users(name,email,password,created_at) VALUES(?,?,?,?)",
+  [name,email,hashed,new Date().toISOString()],
 function(err){
 
 if(err){
@@ -529,15 +531,65 @@ res.json(rows);
 });
 app.post("/api/enroll-course", async (req, res) => {
 
-  const { email, course } = req.body;
+const token = req.headers.authorization?.split(" ")[1];
+if(!token) return res.status(401).json({message:"Please login again"});
 
-  console.log("Enroll API called");
-  console.log("Email:", email);
-  console.log("Course:", course);
+let decoded;
 
-  try {
+try{
+decoded = jwt.verify(token, SECRET_KEY);
+}catch{
+return res.status(401).json({message:"Session expired"});
+}
 
-    const info = await transporter.sendMail({
+const userId = decoded.id;
+const { course } = req.body;
+
+if(!course){
+return res.status(400).json({message:"Course name missing"});
+}
+
+/* GET USER EMAIL */
+
+db.get("SELECT email FROM users WHERE id=?", [userId], (err,user)=>{
+
+if(err || !user){
+return res.status(404).json({message:"User email does not exist"});
+}
+
+const email = user.email;
+
+/* CHECK IF ALREADY ENROLLED */
+
+db.get(
+"SELECT * FROM course_progress WHERE user_id=? AND course=?",
+[userId,course],
+async (err,row)=>{
+
+if(row){
+return res.status(400).json({
+message:"You are already enrolled in this course"
+});
+}
+
+/* INSERT ENROLLMENT */
+
+db.run(
+`INSERT INTO course_progress
+(user_id,course,module_completed,total_modules,completed)
+VALUES(?,?,?,?,?)`,
+[userId,course,0,5,0],
+async (err)=>{
+
+if(err){
+return res.status(500).json({message:"Enrollment failed"});
+}
+
+/* SEND EMAIL (YOUR SAME TEMPLATE) */
+
+try{
+
+const info = await transporter.sendMail({
 from: `"SkillForge" <${process.env.EMAIL_USER}>`,
 to: email,
 subject: "Course Enrollment Confirmation",
@@ -602,17 +654,19 @@ Happy Learning!
 `
 });
 
-    console.log("Mail sent:", info.response);
+console.log("Mail sent:", info.response);
 
-    res.json({ message: "Email sent successfully" });
+}catch(emailErr){
+console.log("Email error:", emailErr);
+}
 
-  } catch (error) {
+res.json({message:"Course enrolled successfully"});
 
-    console.log("Email error:", error);
+});
 
-    res.status(500).json({ message: "Email sending failed" });
+});
 
-  }
+});
 
 });
 // ================= UPDATE COURSE PROGRESS =================
@@ -870,25 +924,33 @@ app.get("/api/admin/stats",(req,res)=>{
 db.get("SELECT COUNT(*) as users FROM users",(e,u)=>{
 db.get("SELECT COUNT(*) as courses FROM courses",(e,c)=>{
 db.get("SELECT COUNT(*) as tests FROM test_results",(e,t)=>{
+db.get("SELECT COUNT(*) as feedback FROM feedback",(e,f)=>{
+db.get("SELECT COUNT(*) as enrollments FROM course_progress",(e,en)=>{
 
 res.json({
 users:u.users,
 courses:c.courses,
-tests:t.tests
+tests:t.tests,
+feedback:f.feedback,
+enrollments:en.enrollments
 });
 
 });
 });
 });
+});
+});
 
 });
-app.post("/api/admin/add-course",(req,res)=>{
+app.post("/api/admin/add-course", upload.single("video"), (req,res)=>{
 
 const {title,description,category} = req.body;
 
+const video = req.file ? req.file.path : null;
+
 db.run(
-"INSERT INTO courses(title,description,category) VALUES(?,?,?)",
-[title,description,category],
+"INSERT INTO courses(title,description,category,video) VALUES(?,?,?,?)",
+[title,description,category,video],
 (err)=>{
 if(err) return res.status(500).json({message:"Error"});
 res.json({message:"Course added"});
@@ -958,7 +1020,7 @@ db.all(
 `SELECT * FROM quizzes
 WHERE course=?
 ORDER BY RANDOM()
-LIMIT 5`,
+LIMIT 20`,
 [req.params.course],
 (err,rows)=>res.json(rows)
 );
@@ -1001,6 +1063,36 @@ ORDER BY date DESC
 `,
 (err,rows)=>res.json(rows)
 );
+
+});
+app.delete("/api/delete-account", (req, res) => {
+
+const token = req.headers.authorization?.split(" ")[1];
+if(!token) return res.status(401).json({message:"Unauthorized"});
+
+let decoded;
+
+try{
+decoded = jwt.verify(token, SECRET_KEY);
+}catch{
+return res.status(401).json({message:"Invalid token"});
+}
+
+const userId = decoded.id;
+
+db.serialize(()=>{
+
+db.run("DELETE FROM users WHERE id=?", [userId]);
+db.run("DELETE FROM profiles WHERE user_id=?", [userId]);
+db.run("DELETE FROM test_results WHERE user_id=?", [userId]);
+db.run("DELETE FROM certificates WHERE user_id=?", [userId]);
+db.run("DELETE FROM feedback WHERE user_id=?", [userId]);
+db.run("DELETE FROM course_progress WHERE user_id=?", [userId]);
+db.run("DELETE FROM notifications WHERE user_id=?", [userId]);
+
+res.json({message:"Account deleted successfully"});
+
+});
 
 });
 app.get("/api/admin/analytics/users", (req,res)=>{
