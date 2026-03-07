@@ -207,135 +207,33 @@ class="search"
 id="courseSearch"
 placeholder="Search courses..."
 >
+
 <p id="noResults" style="display:none;color:#777;margin-top:10px">
 No courses found
 </p>
 
 </div>
 
-<div class="course-grid">
-
-<div class="course-card" onclick="location.href='course-player.html'">
-
-<span class="tag">Beginner</span>
-
-<div class="course-title">
-Machine Learning Foundations
-</div>
-
-<div class="course-desc">
-Learn core ML concepts and algorithms.
-</div>
-
-<div class="course-info">
-Duration: 6 Weeks
-</div>
-
-</div>
-
-<div class="course-card" onclick="location.href='course-player.html'">
-
-<span class="tag">Intermediate</span>
-
-<div class="course-title">
-Deep Learning Basics
-</div>
-
-<div class="course-desc">
-Neural networks and deep learning fundamentals.
-</div>
-
-<div class="course-info">
-Duration: 5 Weeks
-</div>
-
-</div>
-
-<div class="course-card" onclick="location.href='course-player.html'">
-
-<span class="tag">Advanced</span>
-
-<div class="course-title">
-Natural Language Processing
-</div>
-
-<div class="course-desc">
-Build AI systems that understand human language.
-</div>
-
-<div class="course-info">
-Duration: 7 Weeks
-</div>
-
-</div>
-
-<div class="course-card" onclick="location.href='course-player.html'">
-
-<span class="tag">Beginner</span>
-
-<div class="course-title">
-AI for Beginners
-</div>
-
-<div class="course-desc">
-Introduction to Artificial Intelligence concepts.
-</div>
-
-<div class="course-info">
-Duration: 4 Weeks
-</div>
-
-</div>
-
-<div class="course-card" onclick="location.href='course-player.html'">
-
-<span class="tag">Intermediate</span>
-
-<div class="course-title">
-Python for AI
-</div>
-
-<div class="course-desc">
-Learn Python programming for AI development.
-</div>
-
-<div class="course-info">
-Duration: 5 Weeks
-</div>
-
-</div>
-
-<div class="course-card" onclick="location.href='course-player.html'">
-
-<span class="tag">Advanced</span>
-
-<div class="course-title">
-Data Science with AI
-</div>
-
-<div class="course-desc">
-Analyze and visualize data using AI tools.
-</div>
-
-<div class="course-info">
-Duration: 6 Weeks
+<div class="course-grid" id="courseGrid">
 </div>
 
 </div>
 
 </div>
 
-</div>
 
-</div>
-<script
+<script>
+
+/* SEARCH FUNCTION */
+
 const searchInput = document.getElementById("courseSearch");
-const courses = document.querySelectorAll(".course-card");
 const noResults = document.getElementById("noResults");
 
 searchInput.addEventListener("input", function(){
 
 const value = searchInput.value.toLowerCase();
+const courses = document.querySelectorAll(".course-card");
+
 let visible = 0;
 
 courses.forEach(course => {
@@ -343,14 +241,10 @@ courses.forEach(course => {
 const title = course.innerText.toLowerCase();
 
 if(title.includes(value)){
-
 course.style.display = "block";
 visible++;
-
 }else{
-
 course.style.display = "none";
-
 }
 
 });
@@ -362,6 +256,61 @@ noResults.style.display = "none";
 }
 
 });
-<script>
+
+
+/* LOAD COURSES FROM DATABASE */
+
+async function loadCourses(){
+
+try{
+
+const res = await fetch("http://localhost:5000/api/admin/courses");
+
+const courses = await res.json();
+
+const grid = document.getElementById("courseGrid");
+
+grid.innerHTML="";
+
+courses.forEach(c=>{
+
+const card = document.createElement("div");
+
+card.className="course-card";
+
+card.innerHTML = `
+<span class="tag">${c.category}</span>
+
+<div class="course-title">${c.title}</div>
+
+<div class="course-desc">${c.description}</div>
+
+<div class="course-info">Duration: 5 Weeks</div>
+`;
+
+card.onclick = function(){
+
+localStorage.setItem("selectedCourse",c.title);
+
+window.location.href="course-player.html";
+
+};
+
+grid.appendChild(card);
+
+});
+
+}catch(err){
+
+console.log("Error loading courses",err);
+
+}
+
+}
+
+loadCourses();
+
+</script>
+
 </body>
 </html>
