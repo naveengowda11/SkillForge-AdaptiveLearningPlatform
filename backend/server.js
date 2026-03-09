@@ -42,6 +42,36 @@ video TEXT
 
 )`
 );
+/* COURSE OUTCOMES */
+
+db.run(`
+CREATE TABLE IF NOT EXISTS course_outcomes(
+id INTEGER PRIMARY KEY AUTOINCREMENT,
+course_id INTEGER,
+outcome TEXT
+)
+`);
+
+/* COURSE MODULES */
+
+db.run(`
+CREATE TABLE IF NOT EXISTS course_modules(
+id INTEGER PRIMARY KEY AUTOINCREMENT,
+course_id INTEGER,
+title TEXT
+)
+`);
+
+/* COURSE LESSONS */
+
+db.run(`
+CREATE TABLE IF NOT EXISTS course_lessons(
+id INTEGER PRIMARY KEY AUTOINCREMENT,
+module_id INTEGER,
+title TEXT,
+video TEXT
+)
+`);
 db.run(`CREATE TABLE IF NOT EXISTS quizzes(
 id INTEGER PRIMARY KEY AUTOINCREMENT,
 course TEXT,
@@ -61,7 +91,23 @@ message TEXT,
 date TEXT
 )
 `);
+db.run(`
+CREATE TABLE IF NOT EXISTS course_modules(
+id INTEGER PRIMARY KEY AUTOINCREMENT,
+course_id INTEGER,
+title TEXT,
+module_order INTEGER
+)
+`);
 
+db.run(`
+CREATE TABLE IF NOT EXISTS course_lessons(
+id INTEGER PRIMARY KEY AUTOINCREMENT,
+module_id INTEGER,
+title TEXT,
+video TEXT
+)
+`);
 db.run(`
 CREATE TABLE IF NOT EXISTS profiles(
 id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -942,20 +988,67 @@ enrollments:en.enrollments
 });
 
 });
-app.post("/api/admin/add-course", upload.single("video"), (req,res)=>{
+// ================= ADMIN CADD COURSES=================
+app.post("/api/admin/add-course", upload.single("video"), async (req,res)=>{
 
 const {title,description,category} = req.body;
+
+const outcomes = JSON.parse(req.body.outcomes || "[]");
+const modules = JSON.parse(req.body.modules || "[]");
 
 const video = req.file ? req.file.path : null;
 
 db.run(
 "INSERT INTO courses(title,description,category,video) VALUES(?,?,?,?)",
 [title,description,category,video],
-(err)=>{
-if(err) return res.status(500).json({message:"Error"});
-res.json({message:"Course added"});
+function(err){
+
+if(err){
+return res.status(500).json({message:"Course creation failed"});
 }
+
+const courseId = this.lastID;
+
+/* SAVE OUTCOMES */
+
+outcomes.forEach(o=>{
+
+db.run(
+"INSERT INTO course_outcomes(course_id,outcome) VALUES(?,?)",
+[courseId,o]
 );
+
+});
+
+/* SAVE MODULES */
+
+modules.forEach(m=>{
+
+db.run(
+"INSERT INTO course_modules(course_id,title) VALUES(?,?)",
+[courseId,m.title],
+function(){
+
+const moduleId = this.lastID;
+
+/* SAVE LESSONS */
+
+m.lessons.forEach(l=>{
+
+db.run(
+"INSERT INTO course_lessons(module_id,title) VALUES(?,?)",
+[moduleId,l]
+);
+
+});
+
+});
+
+});
+
+res.json({message:"Course created successfully"});
+
+});
 
 });
 app.get("/api/admin/courses",(req,res)=>{
@@ -965,6 +1058,7 @@ res.json(rows);
 });
 
 });
+/* ================= ADMIN DELETE COURSE ================= */
 app.delete("/api/admin/course/:id",(req,res)=>{
 
 db.run(
@@ -974,6 +1068,73 @@ db.run(
 );
 
 });
+/* ================= GET COURSE MODULES ================= */
+app.get("/api/course-modules/:course",(req,res)=>{
+
+const course = req.params.course;
+
+db.get(
+"SELECT id FROM courses WHERE title=?",
+[course],
+(err,courseRow)=>{
+
+if(!courseRow){
+return res.json([]);
+}
+
+db.all(
+"SELECT * FROM course_modules WHERE course_id=?",
+[courseRow.id],
+(err,modules)=>{
+
+res.json(modules);
+
+});
+
+});
+
+});
+/* ================= GET MODULE LESSONS ================= */
+app.get("/api/module-lessons/:moduleId",(req,res)=>{
+
+db.all(
+"SELECT * FROM course_lessons WHERE module_id=?",
+[req.params.moduleId],
+(err,rows)=>{
+
+res.json(rows);
+
+});
+
+});
+/* ================= GET COURSE OUTCOMES ================= */
+app.get("/api/course-outcomes/:course",(req,res)=>{
+
+const course = req.params.course;
+
+db.get(
+"SELECT id FROM courses WHERE title=?",
+[course],
+(err,courseRow)=>{
+
+if(!courseRow){
+return res.json([]);
+}
+
+db.all(
+"SELECT outcome FROM course_outcomes WHERE course_id=?",
+[courseRow.id],
+(err,rows)=>{
+
+res.json(rows);
+
+});
+
+});
+
+});
+
+/* ================= ADMIN MANAGE QUIZZES ================= */
 app.post("/api/admin/add-question",(req,res)=>{
 
 const {
@@ -1130,10 +1291,251 @@ res.json(rows);
 });
 
 });
+// ================= FILE UPLOAD =================
+app.post("/api/files", upload.single("file"), (req,res)=>{
+
+const {title} = req.body;
+const filePath = req.file ? req.file.path : null;
+
+db.run(
+"INSERT INTO files(title,path) VALUES(?,?)",
+[title,filePath],
+(err)=>{
+if(err) return res.status(500).json({message:"Upload failed"});
+res.json({message:"File uploaded"});
+}
+);
+
+});
+// ================= GET FILES =================
+app.get("/api/files",(req,res)=>{
+
+db.all("SELECT * FROM files",(err,rows)=>{
+if(err) return res.status(500).json({message:"Error"});
+res.json(rows);
+});
+
+});
+
+// ================= DELETE FILE =================
+app.delete("/api/files/:id",(req,res)=>{
+
+db.run(
+"DELETE FROM files WHERE id=?",
+[req.params.id],
+()=>{
+res.json({message:"File deleted"});
+});
+
+});
+// ================= DOWNLOAD FILE =================
+app.get("/api/files/download/:id",(req,res)=>{
+db.get(
+"SELECT * FROM files WHERE id=?",
+[req.params.id],
+(err,row)=>{
+if(err || !row) return res.status(404).json({message:"File not found"});
+res.download(row.path, err=>{
+if(err) return res.status(500).json({message:"Download error"});
+});
+}
+);
+}
+);
+// ================= ADMIN USER MANAGEMENT =================
+app.get("/api/admin/users",(req,res)=>{
+db.all("SELECT id,name,email,created_at FROM users",(err,rows)=>{
+if(err) return res.status(500).json({message:"Error"});
+res.json(rows);
+}
+);
+});
+// ================= ADMIN DELETE USER =================
+app.delete("/api/admin/user/:id",(req,res)=>{
+db.run(
+"DELETE FROM users WHERE id=?",
+[req.params.id],
+()=>{
+res.json({message:"User deleted"});
+} );
+} );  
+
+// ================= ADMIN RESET USER PASSWORD =================
+app.post("/api/admin/reset-password",(req,res)=>{
+const {userId,newPassword} = req.body;
+
+bcrypt.hash(newPassword,10,(err,hashed)=>{
+if(err) return res.status(500).json({message:"Error hashing password"});  
+db.run(
+"UPDATE users SET password=? WHERE id=?",
+[hashed,userId],
+()=>{
+res.json({message:"Password reset successfully"});
+}
+);
+});
+});
+// ================= ADMIN COURSE MANAGEMENT =================
+
+app.get("/api/admin/courses",(req,res)=>{
+db.all("SELECT * FROM courses",(err,rows)=>{
+if(err) return res.status(500).json({message:"Error"});
+res.json(rows);
+} );
+}   );
+app.delete("/api/admin/course/:id",(req,res)=>{ 
+db.run(
+"DELETE FROM courses WHERE id=?",
+[req.params.id],()=>{
+res.json({message:"Course deleted"});
+});
+} );  
+
+
+  // ================= MESSAGING =================
+// ================= SEND MESSAGE =================
+app.post("/api/send-message",(req,res)=>{
+
+const {sender_id,receiver_id,message} = req.body;
+
+db.run(
+"INSERT INTO messages(sender_id,receiver_id,message,date) VALUES(?,?,?,?)",
+[sender_id,receiver_id,message,new Date().toISOString()],
+(err)=>{
+if(err) return res.status(500).json({message:"Error sending message"});
+res.json({message:"Message sent"});
+});
+
+});
+// ================= GET MESSAGES =================
+app.get("/api/messages/:user1/:user2",(req,res)=>{
+
+const {user1,user2} = req.params;
+
+db.all(
+`SELECT * FROM messages
+WHERE (sender_id=? AND receiver_id=?)
+OR (sender_id=? AND receiver_id=?)
+ORDER BY date`,
+[user1,user2,user2,user1],
+(err,rows)=>{
+if(err) return res.status(500).json({message:"Error"});
+res.json(rows);
+});
+
+});
+// ================= GET CERTIFICATES =================
+app.get("/api/certificates/:userId",(req,res)=>{
+
+const userId = req.params.userId;
+
+db.all(
+"SELECT * FROM certificates WHERE user_id=? ORDER BY date DESC",
+[userId],
+(err,rows)=>{
+if(err) return res.status(500).json({message:"Error"});
+res.json(rows);
+});
+
+});
+// ================= ADMIN MODULE MANAGEMENT =================
+app.post("/api/admin/add-module",(req,res)=>{
+
+const {course_id,title,module_order} = req.body;
+
+db.run(
+"INSERT INTO course_modules(course_id,title,module_order) VALUES(?,?,?)",
+[course_id,title,module_order],
+()=>res.json({message:"Module added"})
+);
+
+});
+// ================= ADMIN LESSON MANAGEMENT =================
+app.post("/api/admin/add-course", upload.any(), (req,res)=>{
+const {module_id,title} = req.body;
+
+const video = req.file ? req.file.path : null;
+
+db.run(
+"INSERT INTO course_lessons(module_id,title,video) VALUES(?,?,?)",
+[module_id,title,video],
+()=>res.json({message:"Lesson added"})
+);
+
+});
+app.post("/api/admin/add-course", upload.any(), (req,res)=>{
+
+const {title,description,category}=req.body;
+
+const outcomes=JSON.parse(req.body.outcomes||"[]");
+const modules=JSON.parse(req.body.modules||"[]");
+
+const videoFile=req.files.find(f=>f.fieldname==="video");
+const video=videoFile?videoFile.path:null;
+
+db.run(
+"INSERT INTO courses(title,description,category,video) VALUES(?,?,?,?)",
+[title,description,category,video],
+function(err){
+
+if(err) return res.status(500).json({message:"Course creation failed"});
+
+const courseId=this.lastID;
+
+/* OUTCOMES */
+
+outcomes.forEach(o=>{
+db.run(
+"INSERT INTO course_outcomes(course_id,outcome) VALUES(?,?)",
+[courseId,o]
+);
+});
+
+/* VIDEO INDEX */
+
+let videoIndex=0;
+
+/* MODULES */
+
+modules.forEach(module=>{
+
+db.run(
+"INSERT INTO course_modules(course_id,title) VALUES(?,?)",
+[courseId,module.title],
+function(){
+
+const moduleId=this.lastID;
+
+/* LESSONS */
+
+module.lessons.forEach(lesson=>{
+
+const videoFile=req.files.find(f=>f.fieldname==="lessonVideo"+videoIndex);
+
+const videoPath=videoFile?videoFile.path:null;
+
+db.run(
+"INSERT INTO course_lessons(module_id,title,video) VALUES(?,?,?)",
+[moduleId,lesson.title,videoPath]
+);
+
+videoIndex++;
+
+});
+
+});
+
+});
+
+res.json({message:"Course created successfully"});
+
+});
+});
 // ================= START SERVER =================
 
 const PORT=5000;
 
 app.listen(PORT,()=>{
 console.log("SkillForge backend running on port "+PORT);
+
 });
