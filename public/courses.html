@@ -141,6 +141,21 @@ font-size:12px;
 margin-bottom:10px;
 }
 
+.enroll-btn{
+margin-top:10px;
+padding:8px 14px;
+border:none;
+background:#6c7cff;
+color:white;
+border-radius:8px;
+cursor:pointer;
+font-size:14px;
+}
+
+.enroll-btn:hover{
+background:#4f5fff;
+}
+
 </style>
 </head>
 
@@ -208,14 +223,9 @@ id="courseSearch"
 placeholder="Search courses..."
 >
 
-<p id="noResults" style="display:none;color:#777;margin-top:10px">
-No courses found
-</p>
-
 </div>
 
-<div class="course-grid" id="courseGrid">
-</div>
+<div class="course-grid" id="courseGrid"></div>
 
 </div>
 
@@ -224,77 +234,65 @@ No courses found
 
 <script>
 
-/* SEARCH FUNCTION */
+/* SEARCH */
 
 const searchInput = document.getElementById("courseSearch");
-const noResults = document.getElementById("noResults");
 
 searchInput.addEventListener("input", function(){
 
 const value = searchInput.value.toLowerCase();
 const courses = document.querySelectorAll(".course-card");
 
-let visible = 0;
-
 courses.forEach(course => {
 
-const title = course.innerText.toLowerCase();
+const text = course.innerText.toLowerCase();
 
-if(title.includes(value)){
-course.style.display = "block";
-visible++;
+if(text.includes(value)){
+course.style.display="block";
 }else{
-course.style.display = "none";
+course.style.display="none";
 }
 
 });
 
-if(visible === 0){
-noResults.style.display = "block";
-}else{
-noResults.style.display = "none";
-}
-
 });
 
 
-/* LOAD COURSES FROM DATABASE */
+/* LOAD COURSES */
 
 async function loadCourses(){
 
 try{
 
 const res = await fetch("http://localhost:5000/api/admin/courses");
-
 const courses = await res.json();
 
 const grid = document.getElementById("courseGrid");
-
 grid.innerHTML="";
+
+if(!courses || courses.length === 0){
+grid.innerHTML="<p>No courses available yet.</p>";
+return;
+}
 
 courses.forEach(c=>{
 
 const card = document.createElement("div");
-
 card.className="course-card";
 
 card.innerHTML = `
-<span class="tag">${c.category}</span>
+<span class="tag">${c.category || "Course"}</span>
 
 <div class="course-title">${c.title}</div>
 
 <div class="course-desc">${c.description}</div>
 
-<div class="course-info">Duration: 5 Weeks</div>
+<div class="course-info">Duration: Modules Included</div>
+
+<button class="enroll-btn" onclick="enrollCourse('${c.title}')">
+Enroll
+</button>
 `;
-
-card.onclick = function(){
-
-localStorage.setItem("selectedCourse",c.title);
-
-window.location.href="course-player.html";
-
-};
 
 grid.appendChild(card);
 
@@ -308,9 +306,63 @@ console.log("Error loading courses",err);
 
 }
 
+
+/* ENROLL COURSE */
+
+async function enrollCourse(course){
+
+const token = localStorage.getItem("token");
+
+if(!token){
+alert("Session expired. Please login again.");
+window.location.href="login.html";
+return;
+}
+
+try{
+
+const res = await fetch("http://localhost:5000/api/enroll-course",{
+
+method:"POST",
+
+headers:{
+"Content-Type":"application/json",
+Authorization:"Bearer "+token
+},
+
+body:JSON.stringify({
+course:course
+})
+
+});
+
+const data = await res.json();
+
+if(res.ok){
+
+localStorage.setItem("selectedCourse",course);
+
+/* Redirect directly to course player */
+
+window.location.href="course-player.html";
+
+}else{
+
+alert(data.message);
+
+}
+
+}catch(err){
+
+console.log("Enrollment error",err);
+alert("Enrollment failed");
+
+}
+
+}
+
 loadCourses();
 
 </script>
-
 </body>
 </html>
