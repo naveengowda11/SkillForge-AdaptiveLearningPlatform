@@ -14,7 +14,15 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+/* ================= FRONTEND LANDING PAGE ================= */
 
+const FRONTEND_PATH = path.join(__dirname, "../");
+
+app.use(express.static(FRONTEND_PATH));
+
+app.get("/", (req, res) => {
+res.sendFile(path.join(FRONTEND_PATH, "public/index.html"));
+});
 const SECRET_KEY = process.env.JWT_SECRET || "skillforge_secret";
 
 const ADMIN_EMAIL = "admin@skillforge.com";
@@ -988,86 +996,7 @@ enrollments:en.enrollments
 });
 
 });
-// ================= ADMIN CADD COURSES=================
-app.post("/api/admin/add-course", upload.single("video"), async (req,res)=>{
 
-const {title,description,category} = req.body;
-
-const outcomes = JSON.parse(req.body.outcomes || "[]");
-const modules = JSON.parse(req.body.modules || "[]");
-
-const video = req.file ? req.file.path : null;
-
-db.run(
-"INSERT INTO courses(title,description,category,video) VALUES(?,?,?,?)",
-[title,description,category,video],
-function(err){
-
-if(err){
-return res.status(500).json({message:"Course creation failed"});
-}
-
-const courseId = this.lastID;
-
-/* SAVE OUTCOMES */
-
-outcomes.forEach(o=>{
-
-db.run(
-"INSERT INTO course_outcomes(course_id,outcome) VALUES(?,?)",
-[courseId,o]
-);
-
-});
-
-/* SAVE MODULES */
-
-modules.forEach(m=>{
-
-db.run(
-"INSERT INTO course_modules(course_id,title) VALUES(?,?)",
-[courseId,m.title],
-function(){
-
-const moduleId = this.lastID;
-
-/* SAVE LESSONS */
-
-m.lessons.forEach(l=>{
-
-db.run(
-"INSERT INTO course_lessons(module_id,title) VALUES(?,?)",
-[moduleId,l]
-);
-
-});
-
-});
-
-});
-
-res.json({message:"Course created successfully"});
-
-});
-
-});
-app.get("/api/admin/courses",(req,res)=>{
-
-db.all("SELECT * FROM courses",(err,rows)=>{
-res.json(rows);
-});
-
-});
-/* ================= ADMIN DELETE COURSE ================= */
-app.delete("/api/admin/course/:id",(req,res)=>{
-
-db.run(
-"DELETE FROM courses WHERE id=?",
-[req.params.id],
-()=>res.json({message:"Course deleted"})
-);
-
-});
 /* ================= GET COURSE MODULES ================= */
 app.get("/api/course-modules/:course",(req,res)=>{
 
@@ -1451,18 +1380,7 @@ db.run(
 
 });
 // ================= ADMIN LESSON MANAGEMENT =================
-app.post("/api/admin/add-course", upload.any(), (req,res)=>{
-const {module_id,title} = req.body;
 
-const video = req.file ? req.file.path : null;
-
-db.run(
-"INSERT INTO course_lessons(module_id,title,video) VALUES(?,?,?)",
-[module_id,title,video],
-()=>res.json({message:"Lesson added"})
-);
-
-});
 app.post("/api/admin/add-course", upload.any(), (req,res)=>{
 
 const {title,description,category}=req.body;
@@ -1531,11 +1449,58 @@ res.json({message:"Course created successfully"});
 
 });
 });
+/* ================= RECOMMENDATIONS ================= */
+
+app.get("/api/recommendations/:userId",(req,res)=>{
+
+const userId=req.params.userId;
+
+db.get(
+`SELECT weakest_domain 
+FROM test_results 
+WHERE user_id=? 
+ORDER BY date DESC 
+LIMIT 1`,
+[userId],
+(err,row)=>{
+
+if(!row){
+
+return res.json([]);
+
+}
+
+const domain=row.weakest_domain;
+
+db.all(
+`SELECT * 
+FROM courses 
+WHERE title LIKE ? 
+OR category LIKE ?`,
+[`%${domain}%`,`%${domain}%`],
+(err,courses)=>{
+
+res.json(courses);
+
+});
+
+});
+
+});
 // ================= START SERVER =================
 
-const PORT=5000;
+const PORT = 5000;
 
-app.listen(PORT,()=>{
-console.log("SkillForge backend running on port "+PORT);
+app.listen(PORT, () => {
+
+const url = `http://localhost:${PORT}`;
+
+console.log("\n======================================");
+console.log("🚀 SkillForge Server Started");
+console.log("======================================");
+console.log(`🌐 Landing Page: ${url}`);
+console.log(`📊 Admin Dashboard: ${url}/admin-dashboard.html`);
+console.log(`🎓 Student Dashboard: ${url}/dashboard.html`);
+console.log("======================================\n");
 
 });
