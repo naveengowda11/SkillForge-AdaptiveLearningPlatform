@@ -35,6 +35,15 @@ padding-top:20px;
 gap:30px;
 }
 
+.sidebar button{
+width:45px;
+height:45px;
+border:none;
+border-radius:12px;
+background:#f0f2f8;
+cursor:pointer;
+}
+
 .content{
 flex:1;
 padding:30px;
@@ -45,6 +54,7 @@ overflow:auto;
 background:white;
 padding:20px;
 border-radius:18px;
+margin-bottom:20px;
 }
 
 input{
@@ -62,6 +72,15 @@ border:none;
 padding:10px 16px;
 border-radius:8px;
 cursor:pointer;
+}
+
+.question{
+background:#eef1ff;
+padding:12px;
+border-radius:10px;
+margin-top:10px;
+display:flex;
+justify-content:space-between;
 }
 
 </style>
@@ -98,6 +117,7 @@ cursor:pointer;
 <div class="card">
 
 <input id="course" placeholder="Course Name">
+
 <input id="question" placeholder="Question">
 
 <input id="o1" placeholder="Option 1">
@@ -105,9 +125,19 @@ cursor:pointer;
 <input id="o3" placeholder="Option 3">
 <input id="o4" placeholder="Option 4">
 
-<input id="answer" placeholder="Correct option number">
+<input id="answer" placeholder="Correct option number (1-4)">
 
 <button onclick="addQuestion()">Add Question</button>
+
+</div>
+
+<div class="card">
+
+<h3>Course Questions</h3>
+
+<button onclick="loadQuestions()">Load Questions</button>
+
+<div id="questionList"></div>
 
 </div>
 
@@ -117,25 +147,143 @@ cursor:pointer;
 
 <script>
 
+/* ================= ADD QUESTION ================= */
+
 async function addQuestion(){
 
-const data = {
-course:document.getElementById("course").value,
-question:document.getElementById("question").value,
-option1:o1.value,
-option2:o2.value,
-option3:o3.value,
-option4:o4.value,
-answer:answer.value
+const course=document.getElementById("course").value;
+const question=document.getElementById("question").value;
+
+const option1=document.getElementById("o1").value;
+const option2=document.getElementById("o2").value;
+const option3=document.getElementById("o3").value;
+const option4=document.getElementById("o4").value;
+
+const answer=document.getElementById("answer").value;
+
+if(!course || !question){
+alert("Enter course and question");
+return;
+}
+
+const data={
+course,
+question,
+option1,
+option2,
+option3,
+option4,
+answer
 };
 
-await fetch("http://localhost:5000/api/admin/add-question",{
+await fetch(
+"http://localhost:5000/api/admin/add-question",
+{
 method:"POST",
-headers:{"Content-Type":"application/json"},
+headers:{
+"Content-Type":"application/json"
+},
 body:JSON.stringify(data)
-});
+}
+);
 
 alert("Question added");
+
+clearForm();
+
+loadQuestions();
+
+}
+
+/* ================= LOAD QUESTIONS ================= */
+
+async function loadQuestions(){
+
+const course=document.getElementById("course").value;
+
+if(!course){
+alert("Enter course name first");
+return;
+}
+
+const res=await fetch(
+`http://localhost:5000/api/admin/questions/${course}`
+);
+
+const questions=await res.json();
+
+const container=document.getElementById("questionList");
+
+container.innerHTML="";
+
+questions.forEach(q=>{
+
+container.innerHTML+=`
+
+<div class="question">
+
+<div>
+
+<b>${q.question}</b>
+
+<br>
+
+1) ${q.option1}
+<br>
+
+2) ${q.option2}
+<br>
+
+3) ${q.option3}
+<br>
+
+4) ${q.option4}
+
+<br>
+
+<b>Answer: ${q.answer}</b>
+
+</div>
+
+<button onclick="deleteQuestion(${q.id})">
+Delete
+</button>
+
+</div>
+
+`;
+
+});
+
+}
+
+/* ================= DELETE QUESTION ================= */
+
+async function deleteQuestion(id){
+
+if(!confirm("Delete this question?")) return;
+
+await fetch(
+`http://localhost:5000/api/admin/question/${id}`,
+{
+method:"DELETE"
+}
+);
+
+loadQuestions();
+
+}
+
+/* ================= CLEAR FORM ================= */
+
+function clearForm(){
+
+document.getElementById("question").value="";
+document.getElementById("o1").value="";
+document.getElementById("o2").value="";
+document.getElementById("o3").value="";
+document.getElementById("o4").value="";
+document.getElementById("answer").value="";
 
 }
 
