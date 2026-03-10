@@ -75,6 +75,16 @@ border-radius:8px;
 cursor:pointer;
 }
 
+button.small{
+margin-top:8px;
+padding:6px 10px;
+border:none;
+border-radius:6px;
+cursor:pointer;
+background:#6c7cff;
+color:white;
+}
+
 .course{
 display:flex;
 justify-content:space-between;
@@ -121,18 +131,26 @@ margin-top:10px;
 
 <input id="title" placeholder="Course Title">
 <textarea id="description" placeholder="Course Description"></textarea>
-<input id="category" placeholder="Category">
+<input id="category" placeholder="Course Category">
+<input type="file" id="video">
+
+<h4>Course Outcomes</h4>
+<div id="outcomes"></div>
+<button class="small" onclick="addOutcome()">Add Outcome</button>
+
+<h4>Modules</h4>
+<div id="modules"></div>
+<button class="small" onclick="addModule()">Add Module</button>
+
+<br><br>
 
 <button class="add" onclick="addCourse()">Add Course</button>
 
 </div>
 
 <div class="card">
-
 <h3>Courses</h3>
-
 <div id="courseList"></div>
-
 </div>
 
 </div>
@@ -141,20 +159,80 @@ margin-top:10px;
 
 <script>
 
+/* ================= OUTCOME ================= */
+
+function addOutcome(){
+
+const input=document.createElement("input");
+input.placeholder="What student will learn";
+
+document.getElementById("outcomes").appendChild(input);
+
+}
+
+/* ================= MODULE ================= */
+
+function addModule(){
+
+const div=document.createElement("div");
+
+div.innerHTML=`
+<input class="moduleTitle" placeholder="Module Title">
+
+<div class="lessons"></div>
+
+<button class="small" onclick="addLesson(this)">
+Add Lesson
+</button>
+`;
+
+document.getElementById("modules").appendChild(div);
+
+}
+
+/* ================= LESSON ================= */
+
+function addLesson(btn){
+
+const container=btn.previousElementSibling;
+
+const div=document.createElement("div");
+
+div.innerHTML=`
+<input class="lessonTitle" placeholder="Lesson Title">
+<input type="file" class="lessonVideo" accept="video/*">
+`;
+
+container.appendChild(div);
+
+}
+
+/* ================= LOAD COURSES ================= */
+
 async function loadCourses(){
 
-const res = await fetch("http://localhost:5000/api/admin/courses");
-const courses = await res.json();
+const res=await fetch("http://localhost:5000/api/admin/courses");
 
-const list = document.getElementById("courseList");
-list.innerHTML="";
+const courses=await res.json();
 
-courses.forEach(c=>{
+const box=document.getElementById("courseList");
 
-list.innerHTML+=`
+box.innerHTML="";
+
+courses.forEach(course=>{
+
+box.innerHTML+=`
 <div class="course">
-${c.title}
-<button onclick="deleteCourse(${c.id})">Delete</button>
+
+<div>
+<h3>${course.title}</h3>
+<p>${course.description}</p>
+</div>
+
+<button onclick="deleteCourse(${course.id})">
+Delete
+</button>
+
 </div>
 `;
 
@@ -162,31 +240,119 @@ ${c.title}
 
 }
 
+/* ================= ADD COURSE ================= */
+
 async function addCourse(){
 
-const title = document.getElementById("title").value;
-const description = document.getElementById("description").value;
-const category = document.getElementById("category").value;
+const title=document.getElementById("title").value;
+const description=document.getElementById("description").value;
+const category=document.getElementById("category").value;
+const video=document.getElementById("video").files[0];
 
-await fetch("http://localhost:5000/api/admin/add-course",{
-method:"POST",
-headers:{"Content-Type":"application/json"},
-body:JSON.stringify({title,description,category})
+if(!title || !description){
+alert("Please enter course details");
+return;
+}
+
+const outcomes=[
+...document.querySelectorAll("#outcomes input")
+].map(i=>i.value).filter(v=>v.trim()!=="");
+
+const modules=[];
+
+document.querySelectorAll("#modules > div").forEach(module=>{
+
+const moduleTitle=module.querySelector(".moduleTitle").value;
+
+const lessons=[];
+
+module.querySelectorAll(".lessons > div").forEach(lesson=>{
+
+const title=lesson.querySelector(".lessonTitle").value;
+
+lessons.push({title});
+
 });
+
+modules.push({
+title:moduleTitle,
+lessons
+});
+
+});
+
+const formData=new FormData();
+
+formData.append("title",title);
+formData.append("description",description);
+formData.append("category",category);
+
+if(video){
+formData.append("video",video);
+}
+
+formData.append("outcomes",JSON.stringify(outcomes));
+formData.append("modules",JSON.stringify(modules));
+
+let videoIndex=0;
+
+document.querySelectorAll(".lessonVideo").forEach(input=>{
+
+if(input.files[0]){
+
+formData.append(
+"lessonVideo"+videoIndex,
+input.files[0]
+);
+
+videoIndex++;
+
+}
+
+});
+
+try{
+
+const res=await fetch(
+"http://localhost:5000/api/admin/add-course",
+{
+method:"POST",
+body:formData
+}
+);
+
+const data=await res.json();
+
+alert(data.message || "Course added");
 
 loadCourses();
 
+}catch(err){
+
+alert("Upload failed");
+
 }
+
+}
+
+/* ================= DELETE COURSE ================= */
 
 async function deleteCourse(id){
 
-await fetch(`http://localhost:5000/api/admin/course/${id}`,{
+if(!confirm("Delete this course?")) return;
+
+await fetch(
+`http://localhost:5000/api/admin/course/${id}`,
+{
 method:"DELETE"
-});
+}
+);
 
 loadCourses();
 
 }
+
+/* ================= INIT ================= */
 
 loadCourses();
 
