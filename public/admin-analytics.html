@@ -34,8 +34,6 @@ display:flex;
 overflow:hidden;
 }
 
-/* SIDEBAR */
-
 .sidebar{
 width:80px;
 background:#fff;
@@ -71,8 +69,6 @@ background:#111;
 color:white;
 }
 
-/* CONTENT */
-
 .content{
 flex:1;
 padding:30px;
@@ -103,8 +99,6 @@ margin-bottom:10px;
 
 <div class="container">
 
-<!-- SIDEBAR -->
-
 <div class="sidebar">
 
 <button onclick="location.href='admin-dashboard.html'">
@@ -128,8 +122,6 @@ margin-bottom:10px;
 </button>
 
 </div>
-
-<!-- CONTENT -->
 
 <div class="content">
 
@@ -165,15 +157,19 @@ margin-bottom:10px;
 
 <script>
 
-/* STUDENT GROWTH */
+/* ================= STUDENT GROWTH ================= */
 
 async function loadUsers(){
 
-const res = await fetch("http://localhost:5000/api/admin/analytics/users");
-const data = await res.json();
+try{
 
-const labels = data.map(x=>x.month);
-const counts = data.map(x=>x.count);
+const res=await fetch("http://localhost:5000/api/admin/analytics/users");
+const data=await res.json();
+
+if(!data || data.length===0) return;
+
+const labels=data.map(x=>x.month);
+const counts=data.map(x=>x.count);
 
 new Chart(document.getElementById("userChart"),{
 type:"line",
@@ -183,62 +179,126 @@ datasets:[{
 label:"New Users",
 data:counts,
 borderColor:"#6c7cff",
-backgroundColor:"#6c7cff"
+backgroundColor:"rgba(108,124,255,0.2)",
+tension:0.4,
+fill:true
 }]
+},
+options:{
+responsive:true,
+plugins:{legend:{display:false}}
 }
 });
 
+}catch(err){
+
+console.error("User analytics error",err);
+
 }
 
-/* COURSE POPULARITY */
+}
+
+
+/* ================= COURSE POPULARITY ================= */
 
 async function loadCourses(){
 
-const res = await fetch("http://localhost:5000/api/admin/analytics/courses");
-const data = await res.json();
+try{
 
-const labels = data.map(x=>x.course);
-const counts = data.map(x=>x.students);
+const res=await fetch("http://localhost:5000/api/admin/analytics/courses");
+const data=await res.json();
 
-document.getElementById("popularCourse").innerText = labels[0];
+if(!data || data.length===0){
+
+document.getElementById("popularCourse").innerText="No Data";
+
+return;
+
+}
+
+const labels=data.map(x=>x.course);
+const counts=data.map(x=>x.students);
+
+document.getElementById("popularCourse").innerText=labels[0];
 
 new Chart(document.getElementById("courseChart"),{
+
 type:"bar",
+
 data:{
 labels:labels,
 datasets:[{
-label:"Students",
+label:"Students Enrolled",
 data:counts,
 backgroundColor:"#6c7cff"
 }]
+},
+
+options:{
+responsive:true,
+plugins:{legend:{display:false}}
 }
+
 });
 
+}catch(err){
+
+console.error("Course analytics error",err);
+document.getElementById("popularCourse").innerText="Error";
+
 }
 
-/* TEST PERFORMANCE */
+}
+
+
+/* ================= TEST PERFORMANCE ================= */
 
 async function loadTests(){
 
-const res = await fetch("http://localhost:5000/api/admin/analytics/tests");
-const data = await res.json();
+try{
 
-const labels = data.map(x=>x.date);
-const scores = data.map(x=>x.percentage);
+const res=await fetch("http://localhost:5000/api/admin/analytics/tests");
+
+const data=await res.json();
+
+if(!data || data.length===0) return;
+
+const labels=data.map(x=>x.date.substring(0,10));
+const scores=data.map(x=>x.percentage);
 
 new Chart(document.getElementById("testChart"),{
+
 type:"line",
+
 data:{
 labels:labels,
 datasets:[{
 label:"Average %",
 data:scores,
-borderColor:"#ff6384"
+borderColor:"#ff6384",
+backgroundColor:"rgba(255,99,132,0.2)",
+tension:0.4,
+fill:true
 }]
+},
+
+options:{
+responsive:true,
+plugins:{legend:{display:false}}
 }
+
 });
 
+}catch(err){
+
+console.error("Test analytics error",err);
+
 }
+
+}
+
+
+/* ================= INIT ================= */
 
 loadUsers();
 loadCourses();
