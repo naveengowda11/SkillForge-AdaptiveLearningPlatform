@@ -1,5 +1,4 @@
 <!DOCTYPE html>
-
 <html lang="en">
 <head>
 <meta charset="UTF-8">
@@ -145,21 +144,8 @@ cursor:pointer;
 .lower{
 margin-top:20px;
 display:grid;
-grid-template-columns:1fr 1fr;
+grid-template-columns:1fr;
 gap:20px;
-}
-
-.progress{
-height:6px;
-background:#eee;
-border-radius:10px;
-margin-top:6px;
-}
-
-.progress div{
-height:100%;
-background:#6c7cff;
-border-radius:10px;
 }
 
 .friend{
@@ -267,22 +253,7 @@ style="width:40px;height:40px;border-radius:50%;cursor:pointer">
 
 <h3>Select a course</h3>
 
-<!-- replace the three course cards -->
-
-<div class="course c1" onclick="openCourse('Machine Learning')">
-<h3>Machine Learning Foundations</h3>
-<p>Learn ML basics and core concepts</p>
-</div>
-
-<div class="course c2" onclick="openCourse('Deep Learning')">
-<h3>Deep Learning Basics</h3>
-<p>Neural networks and model training</p>
-</div>
-
-<div class="course c3" onclick="openCourse('NLP')">
-<h3>Natural Language Processing</h3>
-<p>Text processing and language models</p>
-</div>
+<div id="dashboardCourses"></div>
 
 </div>
 
@@ -291,27 +262,13 @@ style="width:40px;height:40px;border-radius:50%;cursor:pointer">
 <h3>Performance Chart</h3>
 
 <canvas id="chart"></canvas>
+<p id="noData" style="display:none;color:#777">No performance data yet</p>
 
 </div>
 
 </div>
 
 <div class="lower">
-
-<div class="card">
-
-<h3>Homework</h3>
-
-<p>Learn 10 ML terms</p>
-<div class="progress"><div style="width:57%"></div></div>
-
-<p style="margin-top:12px">Complete adaptive test</p>
-<div class="progress"><div style="width:42%"></div></div>
-
-<p style="margin-top:12px">Watch DL tutorial</p>
-<div class="progress"><div style="width:31%"></div></div>
-
-</div>
 
 <div class="card">
 
@@ -332,37 +289,59 @@ Friends Score
 
 <script>
 
-/* LOGIN CHECK */
-
 const token = localStorage.getItem("token");
+const userId = localStorage.getItem("userId");
 
 if(!token){
 window.location.href="login.html";
 }
 
-/* WELCOME USER */
+/* Welcome */
 
-const name = localStorage.getItem("name");
-document.getElementById("welcomeText").innerText = "Welcome back, "+name;
+const name = localStorage.getItem("name") || "Learner";
+document.getElementById("welcomeText").innerText = "Welcome back, " + name;
+
 
 /* USER SEARCH */
 
-document.getElementById("searchUser").addEventListener("keypress",function(e){
+document.getElementById("searchUser").addEventListener("keypress", async function(e){
 
 if(e.key==="Enter"){
 
-const query=this.value;
+const query=this.value.trim();
 
-window.location.href="search.html?username="+query;
+if(!query) return;
+
+try{
+
+const res = await fetch("http://localhost:5000/api/search-users?q="+query);
+const users = await res.json();
+
+if(users.length===0){
+alert("User not found");
+return;
+}
+
+window.location.href="profile.html?userId="+users[0].id;
+
+}catch(err){
+
+alert("Search failed");
+
+}
 
 }
 
 });
 
 
-/* PERFORMANCE DATA */
+/* PERFORMANCE */
+
+let performanceChart = null;
 
 async function loadPerformance(){
+
+try{
 
 const res = await fetch("http://localhost:5000/api/performance",{
 headers:{Authorization:"Bearer "+token}
@@ -370,92 +349,150 @@ headers:{Authorization:"Bearer "+token}
 
 const data = await res.json();
 
+if(!data || data.length===0){
+document.getElementById("noData").style.display="block";
+return;
+}
+
 const scores = data.map(x=>x.score);
 const labels = data.map(x=>x.date.slice(0,10));
 
-new Chart(document.getElementById("chart"),{
+const ctx = document.getElementById("chart");
+
+if(performanceChart){
+performanceChart.destroy();
+}
+
+performanceChart = new Chart(ctx,{
 
 type:"line",
 
 data:{
 labels:labels,
-
 datasets:[{
 label:"Performance",
 data:scores,
 borderColor:"#6c7cff",
-tension:0.4
+backgroundColor:"rgba(108,124,255,0.2)",
+tension:0.4,
+fill:true
 }]
+},
 
+options:{
+responsive:true,
+plugins:{legend:{display:false}}
 }
 
 });
 
+}catch(err){
+
+console.log("Performance load failed");
+
 }
+
+}
+
 
 /* FRIENDS */
 
 async function loadFriends(){
 
-const userId = localStorage.getItem("userId");
+try{
 
 const res = await fetch("http://localhost:5000/api/friends/"+userId);
-
 const friends = await res.json();
 
 const container = document.getElementById("friendsList");
 
 container.innerHTML="";
 
+if(!friends || friends.length===0){
+
+container.innerHTML="<p style='color:#777'>No friends yet</p>";
+
+return;
+
+}
+
 friends.forEach(f=>{
 
-const div = document.createElement("div");
+container.innerHTML += `
+<div class="friend">
 
-div.className="friend";
-
-div.innerHTML=`
 <div class="friend-left">
 <img src="assets/u1.jpg">
 ${f.name}
 </div>
-<span>Active</span>
-`;
 
-container.appendChild(div);
+<span>Friend</span>
 
-});
-
-}
-
-/* INIT */
-
-loadPerformance();
-loadFriends();
-
-document.getElementById("loading").style.display="none";
-async function loadLeaderboard(){
-
-const res = await fetch("http://localhost:5000/api/leaderboard");
-const users = await res.json();
-
-const container = document.getElementById("leaderboardList");
-
-container.innerHTML="";
-
-users.forEach((u,i)=>{
-
-container.innerHTML += `
-<div class="friend">
-<span>${i+1}. ${u.name}</span>
-<span>${u.total_score}</span>
 </div>
 `;
 
 });
 
+}catch(err){
+
+console.log("Friends load failed");
+
 }
 
-loadLeaderboard();
+}
+
+
+/* DASHBOARD COURSES */
+
+async function loadDashboardCourses(){
+
+try{
+
+const res = await fetch("http://localhost:5000/api/admin/courses");
+
+const courses = await res.json();
+
+const container = document.getElementById("dashboardCourses");
+
+container.innerHTML = "";
+
+if(!courses || courses.length===0){
+
+container.innerHTML = "<p style='color:#777'>No courses available</p>";
+
+return;
+
+}
+
+/* show latest 3 courses */
+
+const latestCourses = courses.slice(-3).reverse();
+
+latestCourses.forEach((course,index)=>{
+
+const colors = ["c1","c2","c3"];
+
+container.innerHTML += `
+<div class="course ${colors[index]}" onclick="openCourse('${course.title}')">
+
+<h3>${course.title}</h3>
+
+<p>${course.description}</p>
+
+</div>
+`;
+
+});
+
+}catch(err){
+
+console.log("Course loading failed");
+
+}
+
+}
+
+
 function openCourse(course){
 
 localStorage.setItem("selectedCourse",course);
@@ -463,6 +500,80 @@ localStorage.setItem("selectedCourse",course);
 window.location.href="course-player.html";
 
 }
+/* ================= RECOMMENDED COURSES ================= */
+
+async function loadRecommendations(){
+
+const userId = localStorage.getItem("userId");
+
+try{
+
+const res = await fetch(
+`http://localhost:5000/api/recommendations/${userId}`
+);
+
+const courses = await res.json();
+
+const container =
+document.getElementById("recommendedCourses");
+
+container.innerHTML="";
+
+if(!courses || courses.length===0){
+
+container.innerHTML=
+"<p style='color:#777'>No recommendations yet.</p>";
+
+return;
+
+}
+
+courses.slice(0,3).forEach(c=>{
+
+container.innerHTML+=`
+
+<div class="course-card">
+
+<h3>${c.title}</h3>
+
+<p>${c.description}</p>
+
+<button onclick="openCourse('${c.title}')">
+Start Learning
+</button>
+
+</div>
+
+`;
+
+});
+
+}catch(err){
+
+console.log("Recommendation error");
+
+}
+
+}
+
+/* INIT */
+
+async function init(){
+
+await loadPerformance();
+
+await loadFriends();
+
+await loadDashboardCourses();
+
+document.getElementById("loading").style.display="none";
+
+await loadRecommendations();
+
+}
+
+init();
+
 </script>
 
 </body>
