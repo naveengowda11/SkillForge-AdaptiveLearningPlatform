@@ -3,8 +3,6 @@
 <head>
 
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-
 <title>SkillForge Adaptive Test</title>
 
 <link href="https://cdn.jsdelivr.net/npm/remixicon@3.5.0/fonts/remixicon.css" rel="stylesheet">
@@ -18,8 +16,6 @@ padding:0;
 box-sizing:border-box;
 font-family:Inter,sans-serif;
 }
-
-/* PAGE */
 
 body{
 background:linear-gradient(135deg,#c6c4ff,#98c5ff);
@@ -37,8 +33,6 @@ border-radius:28px;
 display:flex;
 overflow:hidden;
 }
-
-/* SIDEBAR */
 
 .sidebar{
 width:80px;
@@ -72,8 +66,6 @@ background:#111;
 color:#fff;
 }
 
-/* CONTENT */
-
 .content{
 flex:1;
 padding:40px;
@@ -88,15 +80,11 @@ box-shadow:0 8px 20px rgba(0,0,0,0.05);
 max-width:700px;
 }
 
-/* TIMER */
-
 .timer{
 font-weight:600;
 margin-bottom:10px;
 color:#444;
 }
-
-/* PROGRESS */
 
 .progress-bar{
 width:100%;
@@ -111,10 +99,7 @@ margin-bottom:20px;
 height:100%;
 width:0%;
 background:#6c7cff;
-transition:0.3s;
 }
-
-/* OPTIONS */
 
 .options label{
 display:block;
@@ -123,10 +108,6 @@ padding:12px;
 border-radius:10px;
 background:#f3f4ff;
 cursor:pointer;
-}
-
-.options label:hover{
-background:#e6e8ff;
 }
 
 button.next-btn{
@@ -209,8 +190,8 @@ Time Left: <span id="timeLeft">60</span>s
 
 <canvas id="barChart"></canvas>
 
-<button class="next-btn" onclick="location.href='dashboard.html'">
-Back to Dashboard
+<button class="next-btn" onclick="startCourse()">
+Start Course
 </button>
 
 </div>
@@ -223,68 +204,71 @@ Back to Dashboard
 
 <script>
 
-/* AUTH CHECK */
-
 const token = localStorage.getItem("token");
+const course = localStorage.getItem("selectedCourse");
 
 if(!token){
 window.location.href="login.html";
 }
 
-/* GET COURSE */
-
-const course = localStorage.getItem("testCourse") || "Machine Learning";
+if(!course){
+alert("No course selected.");
+window.location.href="courses.html";
+}
 
 document.getElementById("courseTitle").innerText =
-course + " Test";
+course + " Adaptive Test";
 
-/* COURSE QUESTIONS */
+/* VARIABLES */
 
-const questionBank = {
-
-"AI Fundamentals":[
-
-{q:"What is Artificial Intelligence?",options:["Machine thinking","Human thinking","Random code","None"],answer:0},
-
-{q:"Which language is most used for AI?",options:["Python","HTML","C","CSS"],answer:0},
-
-{q:"AI is mainly about?",options:["Learning from data","Hardcoding","Gaming","Design"],answer:0},
-
-{q:"Machine learning is a subset of?",options:["AI","Math","Physics","Chemistry"],answer:0}
-
-],
-
-"Machine Learning":[
-
-{q:"Supervised learning uses?",options:["Labeled data","No data","Random data","Images only"],answer:0},
-
-{q:"Overfitting means?",options:["Too complex model","Too simple model","Perfect model","None"],answer:0},
-
-{q:"ML algorithm example?",options:["Linear regression","HTML","CSS","Bootstrap"],answer:0},
-
-{q:"Training data is used to?",options:["Teach model","Delete data","Run server","None"],answer:0}
-
-]
-
-};
-
-const questions = questionBank[course];
-
-
-/* TEST VARIABLES */
-
-let currentQuestion=0;
-let score=0;
-let userAnswers=[];
-
-let timeLeft=60;
+let questions = [];
+let currentQuestion = 0;
+let score = 0;
+let timeLeft = 60;
 let timer;
 
-/* ELEMENTS */
+/* LOAD QUESTIONS */
 
-const testArea=document.getElementById("testArea");
-const nextBtn=document.getElementById("nextBtn");
+async function loadQuestions(){
 
+try{
+
+const res = await fetch(
+`http://localhost:5000/api/quiz/${course}`
+);
+
+const data = await res.json();
+
+if(!data || data.length === 0){
+
+document.getElementById("testArea").innerHTML =
+"<p>No quiz available for this course.</p>";
+
+document.getElementById("nextBtn").style.display="none";
+return;
+
+}
+
+questions = data.map(q=>({
+q:q.question,
+options:[q.option1,q.option2,q.option3,q.option4],
+answer:q.answer
+}));
+
+showQuestion();
+
+}catch(err){
+
+console.log("Quiz load error",err);
+
+document.getElementById("testArea").innerHTML =
+"<p>Failed to load quiz.</p>";
+
+}
+
+}
+
+loadQuestions();
 
 /* TIMER */
 
@@ -293,33 +277,27 @@ function startTimer(){
 clearInterval(timer);
 
 timeLeft=60;
-
 document.getElementById("timeLeft").innerText=timeLeft;
 
 timer=setInterval(()=>{
 
 timeLeft--;
-
 document.getElementById("timeLeft").innerText=timeLeft;
 
 if(timeLeft<=0){
-
 clearInterval(timer);
-
-autoNext();
-
+nextQuestion();
 }
 
 },1000);
 
 }
 
-
 /* SHOW QUESTION */
 
 function showQuestion(){
 
-const q=questions[currentQuestion];
+const q = questions[currentQuestion];
 
 let optionsHTML="";
 
@@ -334,7 +312,7 @@ ${opt}
 
 });
 
-testArea.innerHTML=`
+document.getElementById("testArea").innerHTML=`
 
 <h3>Question ${currentQuestion+1} of ${questions.length}</h3>
 
@@ -346,87 +324,64 @@ ${optionsHTML}
 
 `;
 
-document.getElementById("progressFill").style.width=
-((currentQuestion)/questions.length)*100+"%";
+document.getElementById("progressFill").style.width =
+(currentQuestion/questions.length)*100+"%";
 
-if(currentQuestion===questions.length-1){
-nextBtn.innerText="Submit Test";
+if(currentQuestion === questions.length-1){
+document.getElementById("nextBtn").innerText="Submit Test";
 }
 
 startTimer();
 
 }
 
-showQuestion();
-
-
 /* NEXT BUTTON */
 
-nextBtn.addEventListener("click",()=>{
+document.getElementById("nextBtn").addEventListener("click",nextQuestion);
+
+function nextQuestion(){
 
 clearInterval(timer);
 
-const selected=document.querySelector("input[name='option']:checked");
+const selected =
+document.querySelector("input[name='option']:checked");
 
 if(!selected){
-alert("Please select an option");
+alert("Select an option");
 return;
 }
 
 const value=parseInt(selected.value);
 
-userAnswers.push(value);
-
-if(value===questions[currentQuestion].answer){
+if(value === questions[currentQuestion].answer){
 score++;
 }
 
 currentQuestion++;
 
-if(currentQuestion<questions.length){
-showQuestion();
-}else{
-showResults();
-}
-
-});
-
-
-/* AUTO NEXT WHEN TIMER ENDS */
-
-function autoNext(){
-
-userAnswers.push(null);
-
-currentQuestion++;
-
-if(currentQuestion<questions.length){
+if(currentQuestion < questions.length){
 showQuestion();
 }else{
 showResults();
 }
 
 }
-
 
 /* SHOW RESULT */
 
 async function showResults(){
 
-testArea.style.display="none";
-nextBtn.style.display="none";
+document.getElementById("testArea").style.display="none";
+document.getElementById("nextBtn").style.display="none";
 
 document.getElementById("progressFill").style.width="100%";
 
 document.getElementById("resultBox").style.display="block";
 
-document.getElementById("scoreText").innerText=
+document.getElementById("scoreText").innerText =
 "You scored "+score+" / "+questions.length;
 
-/* SAVE RESULT */
-
 try{
-
 await fetch("http://localhost:5000/api/save-test-result",{
 
 method:"POST",
@@ -437,21 +392,17 @@ Authorization:"Bearer "+token
 },
 
 body:JSON.stringify({
-
+course:course,
 score:score,
 total:questions.length,
 weakest_domain:course
-
 })
-
 });
-
 }catch(err){
 
-console.log("Save failed");
+console.log("Result save error");
 
 }
-
 
 /* CHART */
 
@@ -472,6 +423,14 @@ plugins:{legend:{display:false}}
 }
 
 });
+
+}
+
+/* START COURSE */
+
+function startCourse(){
+
+window.location.href="course-player.html";
 
 }
 
