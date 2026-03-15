@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+
+<meta charset="UTF-8">
+<title>Admin Notes Upload</title>
+
+<link href="https://cdn.jsdelivr.net/npm/remixicon@3.5.0/fonts/remixicon.css" rel="stylesheet">
+
+<style>
+
+*{
+margin:0;
+padding:0;
+box-sizing:border-box;
+font-family:Inter,sans-serif;
+}
+
+body{
+background:linear-gradient(135deg,#c6c4ff,#98c5ff);
+height:100vh;
+display:flex;
+align-items:center;
+justify-content:center;
+}
+
+.container{
+width:95%;
+height:92vh;
+background:#f6f7fb;
+border-radius:28px;
+display:flex;
+overflow:hidden;
+}
+
+/* SIDEBAR */
+
+.sidebar{
+width:80px;
+background:#fff;
+display:flex;
+flex-direction:column;
+align-items:center;
+padding-top:20px;
+gap:28px;
+}
+
+.sidebar button{
+width:45px;
+height:45px;
+border:none;
+border-radius:12px;
+background:#f0f2f8;
+cursor:pointer;
+font-size:18px;
+}
+
+.sidebar button.active{
+background:#111;
+color:white;
+}
+
+/* CONTENT */
+
+.content{
+flex:1;
+padding:40px;
+overflow:auto;
+}
+
+.header{
+display:flex;
+justify-content:space-between;
+margin-bottom:25px;
+}
+
+.upload-box{
+background:white;
+padding:30px;
+border-radius:18px;
+box-shadow:0 6px 20px rgba(0,0,0,0.05);
+width:500px;
+}
+
+.upload-box h3{
+margin-bottom:15px;
+}
+
+.upload-box input,
+.upload-box select{
+width:100%;
+padding:10px;
+margin-bottom:15px;
+border:1px solid #ddd;
+border-radius:8px;
+}
+
+.upload-box button{
+padding:12px 18px;
+background:#6c7cff;
+border:none;
+color:white;
+border-radius:10px;
+cursor:pointer;
+}
+
+.files{
+margin-top:30px;
+}
+
+.file{
+background:white;
+padding:15px;
+border-radius:12px;
+margin-bottom:10px;
+display:flex;
+justify-content:space-between;
+}
+
+</style>
+
+</head>
+
+<body>
+
+<div class="container">
+
+<!-- SIDEBAR -->
+
+<div class="sidebar">
+
+<button onclick="location.href='admin-dashboard.html'">📊</button>
+
+<button onclick="location.href='admin-courses.html'">📚</button>
+
+<button onclick="location.href='admin-quiz.html'">🧠</button>
+
+<button class="active">📄</button>
+
+</div>
+
+<!-- CONTENT -->
+
+<div class="content">
+
+<div class="header">
+<h2>Upload Course Notes</h2>
+</div>
+
+<div class="upload-box">
+
+<h3>Add Notes</h3>
+
+<form id="uploadForm">
+
+<select name="course" id="courseSelect" required>
+<option value="">Select Course</option>
+</select>
+
+<input type="text" name="title" placeholder="Note Title" required>
+
+<input type="file" name="file" required>
+
+<button type="submit">Upload Note</button>
+
+</form>
+
+</div>
+
+<div class="files" id="filesList"></div>
+
+</div>
+
+</div>
+
+<script>
+
+const token = localStorage.getItem("token");
+
+/* LOAD COURSES */
+
+async function loadCourses(){
+
+const res = await fetch("http://localhost:5000/api/admin/courses");
+
+const courses = await res.json();
+
+const select = document.getElementById("courseSelect");
+
+courses.forEach(c=>{
+
+select.innerHTML += `<option value="${c.title}">
+${c.title}
+</option>`;
+
+});
+
+}
+
+/* UPLOAD FILE */
+
+document.getElementById("uploadForm").onsubmit = async (e)=>{
+
+e.preventDefault();
+
+const data = new FormData(e.target);
+
+await fetch("http://localhost:5000/api/files",{
+
+method:"POST",
+body:data
+
+});
+
+alert("Note uploaded successfully");
+
+e.target.reset();
+
+loadFiles();
+
+};
+
+/* LOAD FILES */
+
+async function loadFiles(){
+
+const res = await fetch("http://localhost:5000/api/files");
+
+const files = await res.json();
+
+const list = document.getElementById("filesList");
+
+list.innerHTML="";
+
+files.forEach(f=>{
+
+list.innerHTML += `
+<div class="file">
+<span>${f.title}</span>
+<a href="http://localhost:5000/${f.path}" target="_blank">
+Download
+</a>
+</div>
+`;
+
+});
+
+}
+
+loadCourses();
+loadFiles();
+
+</script>
+
+</body>
+</html>
