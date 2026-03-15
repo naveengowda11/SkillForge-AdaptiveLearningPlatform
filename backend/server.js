@@ -3,17 +3,42 @@ require("dotenv").config();
 const express = require("express");
 const sqlite3 = require("sqlite3").verbose();
 const bcrypt = require("bcrypt");
-const jwt = require("jsonwebtoken");
+
 const cors = require("cors");
 const multer = require("multer");
 const nodemailer = require("nodemailer");
 const path = require("path");
 
 const app = express();
+const jwt = require("jsonwebtoken");
 
+function authenticateToken(req,res,next){
+
+const authHeader = req.headers["authorization"];
+
+if(!authHeader){
+return res.sendStatus(401);
+}
+
+const token = authHeader.split(" ")[1];
+
+jwt.verify(token,"secretkey",(err,user)=>{
+
+if(err){
+return res.sendStatus(403);
+}
+
+req.user = user;
+
+next();
+
+});
+
+}
 app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+app.use("/uploads", express.static("uploads"));
 /* ================= FRONTEND LANDING PAGE ================= */
 
 const FRONTEND_PATH = path.join(__dirname, "../");
@@ -62,13 +87,7 @@ outcome TEXT
 
 /* COURSE MODULES */
 
-db.run(`
-CREATE TABLE IF NOT EXISTS course_modules(
-id INTEGER PRIMARY KEY AUTOINCREMENT,
-course_id INTEGER,
-title TEXT
-)
-`);
+
 
 /* COURSE LESSONS */
 
@@ -80,7 +99,8 @@ title TEXT,
 video TEXT
 )
 `);
-db.run(`CREATE TABLE IF NOT EXISTS quizzes(
+db.run(`
+CREATE TABLE IF NOT EXISTS quizzes(
 id INTEGER PRIMARY KEY AUTOINCREMENT,
 course TEXT,
 question TEXT,
@@ -108,14 +128,7 @@ module_order INTEGER
 )
 `);
 
-db.run(`
-CREATE TABLE IF NOT EXISTS course_lessons(
-id INTEGER PRIMARY KEY AUTOINCREMENT,
-module_id INTEGER,
-title TEXT,
-video TEXT
-)
-`);
+
 db.run(`
 CREATE TABLE IF NOT EXISTS profiles(
 id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -175,10 +188,19 @@ date TEXT
 db.run(`
 CREATE TABLE IF NOT EXISTS files(
 id INTEGER PRIMARY KEY AUTOINCREMENT,
+course TEXT,
 title TEXT,
 path TEXT
 )
 `);
+db.run(`
+ALTER TABLE files ADD COLUMN course TEXT
+`, (err) => {
+    if (err && !err.message.includes("duplicate column")) {
+        console.log("Course column error:", err);
+    }
+});
+
 // ================= COURSE PROGRESS =================
 
 db.run(`
@@ -423,7 +445,14 @@ app.post("/api/profile", upload.single("photo"), (req,res)=>{
 const token = req.headers.authorization?.split(" ")[1];
 if(!token) return res.status(401).json({message:"Unauthorized"});
 
-const decoded = jwt.verify(token,SECRET_KEY);
+let decoded;
+
+try{
+decoded = jwt.verify(token,SECRET_KEY);
+}catch{
+return res.status(401).json({message:"Invalid token"});
+}
+
 const userId = decoded.id;
 
 const {
@@ -439,14 +468,30 @@ linkedin,
 bio
 } = req.body;
 
-const photo = req.file ? req.file.path : null;
+const newPhoto = req.file ? req.file.path : null;
+
+db.get(
+"SELECT * FROM profiles WHERE user_id=?",
+[userId],
+(err,row)=>{
+
+if(err){
+return res.status(500).json({message:"Database error"});
+}
+
+let photo = newPhoto;
+
+if(!newPhoto && row){
+photo = row.photo;
+}
 
 db.run(`
 INSERT OR REPLACE INTO profiles
-(user_id,phone,dob,gender,education,university,skills,interests,github,linkedin,bio,photo)
-VALUES(?,?,?,?,?,?,?,?,?,?,?,?)
+(id,user_id,phone,dob,gender,education,university,skills,interests,github,linkedin,bio,photo)
+VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?)
 `,
 [
+row ? row.id : null,
 userId,
 phone,
 dob,
@@ -461,34 +506,53 @@ bio,
 photo
 ],
 (err)=>{
-if(err) return res.status(500).json({message:"Profile save error"});
-res.json({message:"Profile updated"});
-});
+
+if(err){
+return res.status(500).json({message:"Profile save failed"});
+}
+
+res.json({message:"Profile saved successfully"});
 
 });
 
+});
+
+});
 // ================= GET PROFILE =================
-
 app.get("/api/profile",(req,res)=>{
 
-const token=req.headers.authorization?.split(" ")[1];
+const token = req.headers.authorization?.split(" ")[1];
 if(!token) return res.status(401).json({message:"Unauthorized"});
 
-const decoded=jwt.verify(token,SECRET_KEY);
+let decoded;
 
-db.get(
-"SELECT * FROM profiles WHERE user_id=?",
-[decoded.id],
+try{
+decoded = jwt.verify(token,SECRET_KEY);
+}catch{
+return res.status(401).json({message:"Invalid token"});
+}
+
+const userId = decoded.id;
+
+db.get(`
+SELECT users.name, users.email, profiles.*
+FROM users
+LEFT JOIN profiles
+ON users.id = profiles.user_id
+WHERE users.id=?
+`,
+[userId],
 (err,row)=>{
 
-if(err) return res.status(500).json({message:"Error"});
-res.json(row);
+if(err){
+return res.status(500).json({message:"Database error"});
+}
+
+res.json(row || {});
 
 });
 
 });
-
-
 // ================= SAVE TEST RESULT =================
 
 app.post("/api/save-test-result",(req,res)=>{
@@ -563,7 +627,37 @@ res.json(rows);
 });
 
 });
+// ================= STUDY TIME =================
+app.get("/api/study-time", authenticateToken, (req,res)=>{
 
+db.all(`
+SELECT day, SUM(minutes)/60 as hours
+FROM study_sessions
+WHERE user_id=?
+GROUP BY day
+`,[req.user.id],(err,rows)=>{
+
+res.json(rows);
+
+});
+
+});
+// ================= SKILL PROGRESS =================
+app.get("/api/skill-progress", authenticateToken, (req,res)=>{
+
+db.all(`
+SELECT domain,
+AVG(score * 100.0 / total) as score
+FROM test_results
+WHERE user_id=?
+GROUP BY domain
+`,[req.user.id],(err,rows)=>{
+
+res.json(rows);
+
+});
+
+});
 
 // ================= LEADERBOARD =================
 
@@ -723,6 +817,23 @@ res.json({message:"Course enrolled successfully"});
 });
 
 });
+
+app.get("/debug-quizzes",(req,res)=>{
+
+db.all("SELECT * FROM quiz_questions",(err,rows)=>{
+
+if(err){
+console.log(err);
+return res.json([]);
+}
+
+res.json(rows);
+
+});
+
+});
+
+
 // ================= UPDATE COURSE PROGRESS =================
 
 app.post("/api/update-progress",(req,res)=>{
@@ -785,85 +896,76 @@ res.json(row);
 });
 // ================= ADAPTIVE TEST QUESTIONS =================
 
+
 app.get("/api/adaptive-test/:course",(req,res)=>{
 
-const course=req.params.course;
+const course = req.params.course;
 
-const questions={
+db.all(
+`SELECT 
+id,
+question,
+option1,
+option2,
+option3,
+option4,
+answer
+FROM quizzes
+WHERE course = ?
+ORDER BY RANDOM()
+LIMIT 20`,
+[course],
+(err,rows)=>{
 
-"Machine Learning":[
-{q:"What is supervised learning?",level:"easy"},
-{q:"What is overfitting?",level:"medium"},
-{q:"Explain gradient descent.",level:"hard"}
-],
-
-"Deep Learning":[
-{q:"What is a neural network?",level:"easy"},
-{q:"What is backpropagation?",level:"medium"},
-{q:"Explain CNN architecture.",level:"hard"}
-],
-
-"NLP":[
-{q:"What is tokenization?",level:"easy"},
-{q:"What is stemming?",level:"medium"},
-{q:"Explain transformers.",level:"hard"}
-]
-
-};
-
-res.json(questions[course] || []);
-
-});
-// ================= AI RECOMMENDATIONS =================
-
-app.get("/api/recommendations",(req,res)=>{
-
-const token=req.headers.authorization?.split(" ")[1];
-if(!token) return res.status(401).json({message:"Unauthorized"});
-
-const decoded=jwt.verify(token,SECRET_KEY);
-
-db.get(`
-SELECT weakest_domain
-FROM test_results
-WHERE user_id=?
-ORDER BY date DESC
-LIMIT 1
-`,
-[decoded.id],
-(err,row)=>{
-
-if(!row){
-return res.json({recommendations:[]});
+if(err){
+console.log("Adaptive test error:",err);
+return res.status(500).json([]);
 }
 
-const map={
-
-"math":[
-"Linear Algebra Basics",
-"Probability for ML"
-],
-
-"coding":[
-"Python for AI",
-"Data Structures"
-],
-
-"machine learning":[
-"Model Evaluation",
-"Feature Engineering"
-]
-
-};
-
-res.json({
-weak_topic:row.weakest_domain,
-recommendations:map[row.weakest_domain] || []
-});
+res.json(rows);
 
 });
 
 });
+// ================= GET AVAILABLE COURSES FOR TESTS =================
+app.get("/api/adaptive-tests",(req,res)=>{
+
+db.all(
+`
+SELECT 
+course,
+COUNT(*) as total_questions
+FROM quizzes
+GROUP BY course
+`,
+[],
+(err,rows)=>{
+
+if(err){
+console.log(err);
+return res.json([]);
+}
+
+res.json(rows);
+
+});
+
+});
+
+// ================= CHECK TEST COMPLETION =================
+app.get("/api/test-completed/:course", authenticateToken,(req,res)=>{
+
+db.get(
+"SELECT * FROM test_results WHERE user_id=? AND course=?",
+[req.user.id, req.params.course],
+(err,row)=>{
+
+res.json({completed: !!row});
+
+});
+
+});
+
 // ================= GET NOTIFICATIONS =================
 
 app.get("/api/notifications",(req,res)=>{
@@ -1220,57 +1322,99 @@ res.json(rows);
 });
 
 });
-// ================= FILE UPLOAD =================
+
+
+/* ================= FILE UPLOAD ================= */
+
+
+/* ================= UPLOAD FILE ================= */
+
 app.post("/api/files", upload.single("file"), (req,res)=>{
 
-const {title} = req.body;
-const filePath = req.file ? req.file.path : null;
+const {course,title} = req.body;
+
+if(!req.file){
+return res.status(400).json({message:"File required"});
+}
+
+const filePath = req.file.filename || req.file.path;
 
 db.run(
-"INSERT INTO files(title,path) VALUES(?,?)",
-[title,filePath],
+"INSERT INTO files(course,title,path) VALUES(?,?,?)",
+[course,title,filePath],
 (err)=>{
-if(err) return res.status(500).json({message:"Upload failed"});
-res.json({message:"File uploaded"});
+
+if(err){
+console.log(err);
+return res.status(500).json({message:"Upload failed"});
 }
-);
+
+res.json({message:"File uploaded successfully"});
 
 });
-// ================= GET FILES =================
+
+});
+
+/* ================= GET ALL FILES (ADMIN) ================= */
 app.get("/api/files",(req,res)=>{
 
-db.all("SELECT * FROM files",(err,rows)=>{
-if(err) return res.status(500).json({message:"Error"});
+db.all(
+"SELECT * FROM files ORDER BY id DESC",
+(err,rows)=>{
+
+if(err){
+console.log("FILES ERROR:",err);
+return res.status(500).json({message:"Database error"});
+}
+
 res.json(rows);
-});
 
 });
 
-// ================= DELETE FILE =================
+});
+
+/* ================= GET COURSE FILES (STUDENTS) ================= */
+
+app.get("/api/course-notes/:course",(req,res)=>{
+
+const course = req.params.course;
+
+db.all(
+"SELECT * FROM files WHERE course LIKE ? ORDER BY id DESC",
+[`%${course}%`],
+(err,rows)=>{
+
+if(err){
+console.log(err);
+return res.status(500).json({message:"Database error"});
+}
+
+res.json(rows);
+
+});
+
+});
+
+/* ================= DELETE FILE ================= */
+
 app.delete("/api/files/:id",(req,res)=>{
+
+const id = req.params.id;
 
 db.run(
 "DELETE FROM files WHERE id=?",
-[req.params.id],
-()=>{
-res.json({message:"File deleted"});
+[id],
+(err)=>{
+
+if(err){
+return res.status(500).json({message:"Delete failed"});
+}
+
+res.json({message:"File deleted successfully"});
+
 });
 
 });
-// ================= DOWNLOAD FILE =================
-app.get("/api/files/download/:id",(req,res)=>{
-db.get(
-"SELECT * FROM files WHERE id=?",
-[req.params.id],
-(err,row)=>{
-if(err || !row) return res.status(404).json({message:"File not found"});
-res.download(row.path, err=>{
-if(err) return res.status(500).json({message:"Download error"});
-});
-}
-);
-}
-);
 // ================= ADMIN USER MANAGEMENT =================
 app.get("/api/admin/users",(req,res)=>{
 db.all("SELECT id,name,email,created_at FROM users",(err,rows)=>{
@@ -1487,6 +1631,44 @@ res.json(courses);
 });
 
 });
+// ================= ACTIVE HOURS =================
+app.get("/api/admin/active-hours",(req,res)=>{
+
+db.all(`
+SELECT strftime('%H',login_time) as hour,
+COUNT(*) as count
+FROM user_activity
+GROUP BY hour
+ORDER BY hour
+`,[],(err,rows)=>{
+res.json(rows || []);
+});
+
+});
+
+// ================= ACTIVITY FEED =================
+app.get("/api/admin/activity-feed",(req,res)=>{
+
+db.all(`
+SELECT users.name as user,
+activity.action,
+activity.time
+FROM activity
+JOIN users ON users.id = activity.user_id
+ORDER BY time DESC
+LIMIT 10
+`,[],(err,rows)=>{
+res.json(rows || []);
+});
+
+});
+// ================= ONLINE USERS =================
+app.get("/api/admin/online-users",(req,res)=>{
+db.get("SELECT COUNT(*) as online FROM users WHERE online=1",(err,row)=>{
+res.json({online:row.online});
+});
+});
+
 // ================= START SERVER =================
 
 const PORT = 5000;
