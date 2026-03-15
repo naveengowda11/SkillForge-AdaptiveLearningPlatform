@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html>
+<head>
+
+<title>Edit Course</title>
+
+<link href="https://cdn.jsdelivr.net/npm/remixicon@3.5.0/fonts/remixicon.css" rel="stylesheet">
+
+<style>
+
+*{
+margin:0;
+padding:0;
+box-sizing:border-box;
+font-family:Inter;
+}
+
+body{
+background:linear-gradient(135deg,#c6c4ff,#98c5ff);
+min-height:100vh;
+padding:40px;
+}
+
+/* CONTAINER */
+
+.container{
+max-width:900px;
+margin:auto;
+}
+
+/* HEADER */
+
+.header{
+display:flex;
+justify-content:space-between;
+align-items:center;
+margin-bottom:20px;
+}
+
+.header h1{
+font-size:26px;
+}
+
+.back{
+background:#fff;
+border:none;
+padding:8px 14px;
+border-radius:8px;
+cursor:pointer;
+}
+
+/* CARD */
+
+.card{
+background:#fff;
+padding:25px;
+border-radius:16px;
+margin-bottom:20px;
+box-shadow:0 6px 18px rgba(0,0,0,0.08);
+}
+
+input, textarea{
+width:100%;
+padding:10px;
+border-radius:8px;
+border:1px solid #ddd;
+margin-top:8px;
+margin-bottom:15px;
+}
+
+/* MODULE */
+
+.module{
+border:1px solid #eee;
+padding:15px;
+border-radius:10px;
+margin-bottom:10px;
+}
+
+.lesson{
+margin-left:10px;
+margin-top:8px;
+}
+
+/* BUTTONS */
+
+button{
+border:none;
+background:#6c7cff;
+color:#fff;
+padding:8px 14px;
+border-radius:8px;
+cursor:pointer;
+}
+
+.add{
+background:#8b9bff;
+}
+
+.save{
+margin-top:20px;
+padding:12px 18px;
+font-size:16px;
+}
+
+</style>
+
+</head>
+
+<body>
+
+<div class="container">
+
+<div class="header">
+<h1>Edit Course</h1>
+<button class="back" onclick="window.location.href='admin-course-library.html'">
+Back
+</button>
+</div>
+
+<div class="card">
+
+<label>Course Title</label>
+<input id="title">
+
+<label>Description</label>
+<textarea id="description"></textarea>
+
+<label>Category</label>
+<input id="category">
+
+<label>Course Video</label>
+<input type="file" id="video">
+
+</div>
+
+<div class="card">
+
+<h3>Modules</h3>
+
+<div id="modules"></div>
+
+<button class="add" onclick="addModule()">Add Module</button>
+
+</div>
+
+<button class="save" onclick="saveCourse()">Save Changes</button>
+
+</div>
+
+<script>
+
+const params = new URLSearchParams(window.location.search);
+const id = params.get("id");
+
+/* ADD MODULE */
+
+function addModule(){
+
+const div=document.createElement("div");
+
+div.className="module";
+
+div.innerHTML=`
+<input class="moduleTitle" placeholder="Module Title">
+
+<div class="lessons"></div>
+
+<button onclick="addLesson(this)">Add Lesson</button>
+`;
+
+document.getElementById("modules").appendChild(div);
+
+}
+
+/* ADD LESSON */
+
+function addLesson(btn){
+
+const container=btn.previousElementSibling;
+
+const div=document.createElement("div");
+
+div.className="lesson";
+
+div.innerHTML=`
+<input class="lessonTitle" placeholder="Lesson Title">
+<input type="file" class="lessonVideo">
+`;
+
+container.appendChild(div);
+
+}
+
+/* LOAD COURSE */
+
+async function loadCourse(){
+
+const res=await fetch(`http://localhost:5000/api/course/${id}`);
+
+const data=await res.json();
+
+title.value=data.title;
+description.value=data.description;
+category.value=data.category;
+
+}
+
+loadCourse();
+
+/* SAVE COURSE */
+
+async function saveCourse(){
+
+const formData=new FormData();
+
+formData.append("title",title.value);
+formData.append("description",description.value);
+formData.append("category",category.value);
+
+const video=document.getElementById("video").files[0];
+
+if(video){
+formData.append("video",video);
+}
+
+await fetch(
+`http://localhost:5000/api/admin/course/${id}`,
+{
+method:"PUT",
+body:formData
+});
+
+alert("Course Updated");
+
+window.location.href="admin-course-library.html";
+
+}
+
+</script>
+
+</body>
+</html>
