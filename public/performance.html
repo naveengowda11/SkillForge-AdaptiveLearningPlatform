@@ -2,9 +2,9 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>SkillForge Performance</title>
+<title>SkillForge Profile</title>
 
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<link href="https://cdn.jsdelivr.net/npm/remixicon@3.5.0/fonts/remixicon.css" rel="stylesheet">
 
 <style>
 
@@ -32,6 +32,8 @@ display:flex;
 overflow:hidden;
 }
 
+/* SIDEBAR */
+
 .sidebar{
 width:80px;
 background:#fff;
@@ -39,7 +41,7 @@ display:flex;
 flex-direction:column;
 align-items:center;
 padding-top:20px;
-gap:28px;
+gap:30px;
 }
 
 .sidebar button{
@@ -49,10 +51,9 @@ border:none;
 border-radius:12px;
 background:#f0f2f8;
 cursor:pointer;
-display:flex;
-align-items:center;
-justify-content:center;
 }
+
+/* CONTENT */
 
 .content{
 flex:1;
@@ -60,45 +61,82 @@ padding:30px;
 overflow:auto;
 }
 
-.header{
+/* HEADER */
+
+.profile-header{
+display:flex;
+align-items:center;
+gap:20px;
+background:white;
+padding:25px;
+border-radius:16px;
 margin-bottom:20px;
 }
 
-.grid{
-display:grid;
-grid-template-columns:2fr 1fr;
-gap:25px;
-margin-bottom:25px;
+.profile-header img{
+width:90px;
+height:90px;
+border-radius:50%;
+object-fit:cover;
 }
 
-.grid3{
-display:grid;
-grid-template-columns:1fr 1fr 1fr;
-gap:25px;
+.profile-info h2{
+margin-bottom:4px;
 }
 
-.card{
+/* STATS */
+
+.stats{
+display:grid;
+grid-template-columns:repeat(4,1fr);
+gap:15px;
+margin-bottom:20px;
+}
+
+.stat-card{
 background:white;
-padding:20px;
-border-radius:18px;
-box-shadow:0 6px 20px rgba(0,0,0,0.05);
+padding:18px;
+border-radius:14px;
+text-align:center;
 }
 
-.small{
-font-size:14px;
-color:#777;
-margin-bottom:10px;
+/* SECTIONS */
+
+.section{
+background:white;
+padding:25px;
+border-radius:16px;
+margin-bottom:20px;
 }
 
-.exercise{
-display:flex;
-justify-content:space-between;
-margin:12px 0;
+.section h3{
+margin-bottom:12px;
 }
 
-.circle{
-width:220px;
-margin:auto;
+/* PROGRESS BAR */
+
+.progress{
+background:#eee;
+height:10px;
+border-radius:6px;
+margin-top:6px;
+}
+
+.progress-fill{
+height:10px;
+background:#6c7cff;
+border-radius:6px;
+}
+
+/* BUTTON */
+
+button.edit{
+background:#6c7cff;
+color:white;
+border:none;
+padding:10px 18px;
+border-radius:8px;
+cursor:pointer;
 }
 
 </style>
@@ -108,8 +146,13 @@ margin:auto;
 
 <div class="container">
 
+<!-- SIDEBAR -->
+
 <div class="sidebar">
-<button class="active"><i class="ri-home-4-line"></i></button>
+
+<button onclick="location.href='dashboard.html'">
+<i class="ri-home-4-line"></i>
+</button>
 
 <button onclick="location.href='courses.html'">
 <i class="ri-book-open-line"></i>
@@ -123,100 +166,96 @@ margin:auto;
 <i class="ri-bar-chart-line"></i>
 </button>
 
-<button onclick="location.href='files.html'">
-<i class="ri-file-text-line"></i>
-</button>
-
-<button onclick="location.href='certificates.html'">
-<i class="ri-award-line"></i>
-</button>
-
-<button onclick="location.href='messages.html'">
-<i class="ri-message-2-line"></i>
-</button>
-
-<button onclick="location.href='notifications.html'">
-<i class="ri-notification-3-line"></i>
-</button>
-
-<button onclick="location.href='leaderboard.html'">
-<i class="ri-trophy-line"></i>
-</button>
-
-<button onclick="location.href='settings.html'">
-<i class="ri-settings-3-line"></i>
-</button>
-
 </div>
+
+<!-- CONTENT -->
 
 <div class="content">
 
-<div class="header">
-<h2>Learning Performance</h2>
-</div>
+<!-- PROFILE HEADER -->
 
-<div class="grid">
+<div class="profile-header">
 
-<div class="card">
-<h3>Learning Overview</h3>
-<p class="small">Tracks your progress</p>
-<canvas id="progressChart"></canvas>
-</div>
+<img id="profilePhoto" src="assets/profile.jpg">
 
-<div class="card">
-<h3>Average Performance</h3>
-<p class="small">Your overall score</p>
+<div class="profile-info">
+<h2 id="profileName">Loading...</h2>
+<p id="profileEmail"></p>
 
-<div class="circle">
-<canvas id="averageChart"></canvas>
+<button class="edit" onclick="location.href='edit-profile.html'">
+Edit Profile
+</button>
 </div>
 
 </div>
 
+<!-- STATS -->
+
+<div class="stats">
+
+<div class="stat-card">
+<h3 id="coursesEnrolled">0</h3>
+<p>Courses</p>
 </div>
 
-<div class="grid3">
-
-<div class="card">
-<h3>Skill Developed</h3>
-<canvas id="skillChart"></canvas>
+<div class="stat-card">
+<h3 id="coursesCompleted">0</h3>
+<p>Completed</p>
 </div>
 
-<div class="card">
-<h3>Study Time</h3>
-<canvas id="studyChart"></canvas>
+<div class="stat-card">
+<h3 id="certificatesEarned">0</h3>
+<p>Certificates</p>
 </div>
 
-<div class="card">
-
-<h3>Exercise</h3>
-
-<div class="exercise">
-<span>Machine Learning</span>
-<span id="mlScore">-</span>
-</div>
-
-<div class="exercise">
-<span>Deep Learning</span>
-<span id="dlScore">-</span>
-</div>
-
-<div class="exercise">
-<span>NLP</span>
-<span id="nlpScore">-</span>
-</div>
-
-<div class="exercise">
-<span>Math</span>
-<span id="mathScore">-</span>
-</div>
-
-<div class="exercise">
-<span>Coding</span>
-<span id="codingScore">-</span>
+<div class="stat-card">
+<h3 id="leaderboardRank">-</h3>
+<p>Leaderboard Rank</p>
 </div>
 
 </div>
+
+<!-- ABOUT -->
+
+<div class="section">
+
+<h3>About</h3>
+
+<p id="bioText">Loading...</p>
+
+</div>
+
+<!-- EDUCATION -->
+
+<div class="section">
+
+<h3>Education</h3>
+
+<p id="educationText"></p>
+
+<h3>Skills</h3>
+
+<p id="skillsText"></p>
+
+</div>
+
+<!-- COURSE PROGRESS -->
+
+<div class="section">
+
+<h3>Course Progress</h3>
+
+<div id="courseProgress"></div>
+
+</div>
+
+<!-- CERTIFICATES -->
+
+<div class="section">
+
+<h3>Certificates</h3>
+
+<div id="certificateList"></div>
 
 </div>
 
@@ -227,120 +266,153 @@ margin:auto;
 <script>
 
 const token = localStorage.getItem("token");
+const userId = localStorage.getItem("userId");
 
-async function loadPerformance(){
+/* LOAD PROFILE */
 
-const res = await fetch("http://localhost:5000/api/performance",{
-headers:{ Authorization:"Bearer "+token }
+async function loadProfile(){
+
+const res = await fetch(
+"http://localhost:5000/api/profile",
+{
+headers:{Authorization:"Bearer "+token}
 });
 
 const data = await res.json();
 
-/* TEST SCORES */
+profileName.innerText = data.name || localStorage.getItem("name");
+profileEmail.innerText = data.email || "";
 
-const scores = data.map(x => (x.score/x.total)*100);
-const labels = data.map((x,i)=> "Test "+(i+1));
+bioText.innerText = data.bio || "No bio added yet.";
+educationText.innerText = data.education || "-";
+skillsText.innerText = data.skills || "-";
 
-/* Progress Chart */
-
-new Chart(document.getElementById("progressChart"),{
-type:"line",
-data:{
-labels:labels,
-datasets:[{
-label:"Score %",
-data:scores,
-borderColor:"#6c7cff",
-backgroundColor:"rgba(108,124,255,0.2)",
-tension:0.4
-}]
+if(data.photo){
+profilePhoto.src =
+"http://localhost:5000/"+data.photo.replace(/\\/g,"/");
 }
-});
-
-/* Average Performance */
-
-const avg = scores.length
-? scores.reduce((a,b)=>a+b,0)/scores.length
-: 0;
-
-new Chart(document.getElementById("averageChart"),{
-type:"doughnut",
-data:{
-datasets:[{
-data:[avg,100-avg],
-backgroundColor:["#6c7cff","#e5e7eb"]
-}]
-},
-options:{cutout:"70%"}
-});
-
-/* Skill Radar */
-
-/* REAL SKILL DATA */
-
-const skillRes = await fetch("http://localhost:5000/api/skill-progress",{
-headers:{ Authorization:"Bearer "+token }
-});
-
-const skillData = await skillRes.json();
-
-const skillLabels = skillData.map(s=>s.domain);
-const skillScores = skillData.map(s=>s.score);
-
-new Chart(document.getElementById("skillChart"),{
-type:"radar",
-data:{
-labels:skillLabels,
-datasets:[{
-label:"Skill Level",
-data:skillScores,
-backgroundColor:"rgba(108,124,255,0.2)",
-borderColor:"#6c7cff"
-}]
-},
-options:{
-scales:{
-r:{
-suggestedMin:0,
-suggestedMax:100
-}
-}
-}
-});
-
-/* UPDATE EXERCISE SCORES */
-
-document.getElementById("mlScore").innerText = domains.ML;
-document.getElementById("dlScore").innerText = domains.DL;
-document.getElementById("nlpScore").innerText = domains.NLP;
-document.getElementById("mathScore").innerText = domains.Math;
-document.getElementById("codingScore").innerText = domains.Coding;
-
-/* STUDY TIME FROM BACKEND */
-
-const studyRes = await fetch("http://localhost:5000/api/study-time",{
-headers:{ Authorization:"Bearer "+token }
-});
-
-const study = await studyRes.json();
-
-const studyLabels = study.map(x=>x.day);
-const studyHours = study.map(x=>x.hours);
-
-new Chart(document.getElementById("studyChart"),{
-type:"bar",
-data:{
-labels:studyLabels,
-datasets:[{
-data:studyHours,
-backgroundColor:"#22c55e"
-}]
-}
-});
 
 }
 
-loadPerformance();
+/* LOAD STATS */
+
+async function loadStats(){
+
+const res = await fetch(
+`http://localhost:5000/api/profile-stats/${userId}`
+);
+
+const data = await res.json();
+
+coursesEnrolled.innerText = data.enrolled || 0;
+coursesCompleted.innerText = data.completed || 0;
+certificatesEarned.innerText = data.certificates || 0;
+leaderboardRank.innerText = data.rank || "-";
+
+}
+
+/* LOAD COURSE PROGRESS */
+
+async function loadProgress(){
+
+const res = await fetch(
+"http://localhost:5000/api/admin/courses"
+);
+
+const courses = await res.json();
+
+const container = document.getElementById("courseProgress");
+
+container.innerHTML="";
+
+for(const c of courses){
+
+const progressRes = await fetch(
+`http://localhost:5000/api/course-progress/${c.title}`,
+{
+headers:{Authorization:"Bearer "+token}
+});
+
+const progress = await progressRes.json();
+
+if(!progress) continue;
+
+const percent =
+Math.floor((progress.module_completed/progress.total_modules)*100);
+
+container.innerHTML+=`
+
+<div style="margin-bottom:12px">
+
+<b>${c.title}</b>
+
+<div class="progress">
+<div class="progress-fill" style="width:${percent}%"></div>
+</div>
+
+<span>${percent}% complete</span>
+
+</div>
+
+`;
+
+}
+
+}
+
+/* LOAD CERTIFICATES */
+
+async function loadCertificates(){
+
+const res = await fetch(
+`http://localhost:5000/api/certificates/${userId}`
+);
+
+const certs = await res.json();
+
+const container = document.getElementById("certificateList");
+
+container.innerHTML="";
+
+if(!certs || certs.length===0){
+
+container.innerHTML="<p>No certificates yet</p>";
+return;
+
+}
+
+certs.forEach(c=>{
+
+container.innerHTML+=`
+
+<div style="margin-bottom:10px">
+
+<b>${c.course}</b><br>
+Completed on ${new Date(c.date).toLocaleDateString()}
+
+</div>
+
+`;
+
+});
+
+}
+
+/* INIT */
+
+async function init(){
+
+await loadProfile();
+
+await loadStats();
+
+await loadProgress();
+
+await loadCertificates();
+
+}
+
+init();
 
 </script>
 
