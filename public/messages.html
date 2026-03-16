@@ -2,14 +2,20 @@
 
 <html lang="en">
 <head>
+
 <meta charset="UTF-8">
-<title>SkillForge Messages</title>
+<title>SkillForge AI Tutor</title>
 
 <link href="https://cdn.jsdelivr.net/npm/remixicon@3.5.0/fonts/remixicon.css" rel="stylesheet">
 
 <style>
 
-*{margin:0;padding:0;box-sizing:border-box;font-family:Inter,sans-serif;}
+*{
+margin:0;
+padding:0;
+box-sizing:border-box;
+font-family:Inter,sans-serif;
+}
 
 body{
 background:linear-gradient(135deg,#c6c4ff,#98c5ff);
@@ -19,20 +25,7 @@ align-items:center;
 justify-content:center;
 }
 
-.loading{
-position:fixed;
-top:0;
-left:0;
-width:100%;
-height:100%;
-background:#0f172a;
-display:flex;
-align-items:center;
-justify-content:center;
-color:white;
-font-size:20px;
-z-index:9999;
-}
+/* MAIN CONTAINER */
 
 .container{
 width:95%;
@@ -42,6 +35,8 @@ border-radius:28px;
 display:flex;
 overflow:hidden;
 }
+
+/* SIDEBAR */
 
 .sidebar{
 width:80px;
@@ -78,96 +73,148 @@ background:#111;
 color:white;
 }
 
+/* CHAT HISTORY */
+
+.history{
+width:230px;
+background:white;
+border-right:1px solid #eee;
+padding:15px;
+overflow-y:auto;
+}
+
+.history h3{
+font-size:14px;
+margin-bottom:15px;
+color:#555;
+}
+
+.chat-item{
+padding:10px;
+border-radius:8px;
+background:#f3f4ff;
+margin-bottom:8px;
+cursor:pointer;
+font-size:13px;
+}
+
+.chat-item:hover{
+background:#e5e7ff;
+}
+
+/* CONTENT */
+
 .content{
 flex:1;
 display:flex;
+flex-direction:column;
 }
 
-.conversations{
-width:280px;
-background:#fff;
-border-right:1px solid #eee;
-padding:20px;
-overflow:auto;
+/* HEADER */
+
+.chat-header{
+padding:20px 30px;
+border-bottom:1px solid #eee;
+display:flex;
+justify-content:space-between;
+align-items:center;
+background:white;
 }
 
-.chat-user{
+.chat-header h2{
+font-weight:600;
 display:flex;
 align-items:center;
-gap:10px;
-padding:10px;
-border-radius:10px;
+gap:8px;
+}
+
+.new-chat{
+background:#6c7cff;
+color:white;
+border:none;
+padding:8px 14px;
+border-radius:8px;
 cursor:pointer;
 }
 
-.chat-user:hover{
-background:#f1f2f7;
-}
+/* CHAT AREA */
 
-.chat-user img{
-width:35px;
-height:35px;
-border-radius:50%;
-}
-
-.chat{
+.chat-area{
 flex:1;
+padding:30px;
+overflow-y:auto;
 display:flex;
 flex-direction:column;
-padding:20px;
+gap:15px;
 }
 
-.chat-header{
-display:flex;
-align-items:center;
-gap:10px;
-margin-bottom:20px;
-}
-
-.chat-header img{
-width:40px;
-height:40px;
-border-radius:50%;
-}
-
-.messages{
-flex:1;
-overflow:auto;
-}
+/* MESSAGE */
 
 .message{
-background:#e9ecff;
-padding:10px 14px;
+max-width:65%;
+padding:14px 18px;
 border-radius:12px;
-margin-bottom:10px;
-width:fit-content;
+font-size:14px;
+line-height:1.5;
 }
 
-.message.me{
+.user{
 background:#6c7cff;
 color:white;
-margin-left:auto;
+align-self:flex-end;
 }
 
-.chat-input{
+.ai{
+background:white;
+border:1px solid #e5e7ff;
+align-self:flex-start;
+}
+
+/* PROMPTS */
+
+.prompts{
 display:flex;
 gap:10px;
-margin-top:10px;
+flex-wrap:wrap;
+padding:0 30px 10px 30px;
+}
+
+.prompt{
+background:#eef0ff;
+padding:6px 12px;
+border-radius:20px;
+font-size:12px;
+cursor:pointer;
+}
+
+.prompt:hover{
+background:#dde0ff;
+}
+
+/* INPUT AREA */
+
+.chat-input{
+padding:20px;
+border-top:1px solid #eee;
+display:flex;
+gap:10px;
+background:white;
 }
 
 .chat-input input{
 flex:1;
-padding:10px;
-border-radius:10px;
+padding:12px;
+border-radius:8px;
 border:1px solid #ddd;
+outline:none;
 }
 
 .chat-input button{
-padding:10px 16px;
-border:none;
 background:#6c7cff;
+border:none;
 color:white;
-border-radius:10px;
+padding:12px 20px;
+border-radius:8px;
 cursor:pointer;
 }
 
@@ -177,9 +224,9 @@ cursor:pointer;
 
 <body>
 
-<div id="loading" class="loading">Loading messages...</div>
-
 <div class="container">
+
+<!-- MAIN SIDEBAR -->
 
 <div class="sidebar">
 
@@ -208,7 +255,7 @@ cursor:pointer;
 </button>
 
 <button class="active">
-<i class="ri-message-2-line"></i>
+<i class="ri-robot-line"></i>
 </button>
 
 <button onclick="location.href='settings.html'">
@@ -217,31 +264,61 @@ cursor:pointer;
 
 </div>
 
-<div class="content">
+<!-- CHAT HISTORY PANEL -->
 
-<div class="conversations">
+<div class="history">
 
-<h2>Messages</h2>
+<h3>Chat History</h3>
 
-<div id="friendsList"></div>
+<div id="historyList"></div>
 
 </div>
 
-<div class="chat">
+<!-- MAIN CHAT CONTENT -->
+
+<div class="content">
 
 <div class="chat-header">
 
-<img src="assets/profile.jpg">
+<h2>
+<i class="ri-robot-line"></i>
+AI Tutor
+</h2>
 
-<h3 id="chatName">Select a friend</h3>
+<button class="new-chat" onclick="startNewChat()">New Chat</button>
 
 </div>
 
-<div class="messages" id="messagesBox"></div>
+<div class="prompts">
+
+<div class="prompt" onclick="usePrompt('What is machine learning?')">
+What is machine learning?
+</div>
+
+<div class="prompt" onclick="usePrompt('Explain neural networks')">
+Explain neural networks
+</div>
+
+<div class="prompt" onclick="usePrompt('What is deep learning?')">
+What is deep learning?
+</div>
+
+<div class="prompt" onclick="usePrompt('How does supervised learning work?')">
+Supervised learning
+</div>
+
+</div>
+
+<div id="chatArea" class="chat-area"></div>
 
 <div class="chat-input">
 
-<input id="messageInput" placeholder="Type a message...">
+<input
+type="text"
+id="userInput"
+placeholder="Ask your doubt..."
+
+>
 
 <button onclick="sendMessage()">Send</button>
 
@@ -251,133 +328,143 @@ cursor:pointer;
 
 </div>
 
-</div>
-
 <script>
 
-const token = localStorage.getItem("token");
-const userId = localStorage.getItem("userId");
+const chatArea = document.getElementById("chatArea");
+const input = document.getElementById("userInput");
+const historyList = document.getElementById("historyList");
 
-if(!token){
-window.location.href="login.html";
-}
+let chats = JSON.parse(localStorage.getItem("skillforgeChats")) || [];
+let currentChat = null;
 
-let currentFriend=null;
+/* LOAD HISTORY */
 
-/* LOAD FRIENDS */
+function loadHistory(){
 
-async function loadFriends(){
+historyList.innerHTML="";
 
-const res = await fetch("http://localhost:5000/api/friends/"+userId);
+chats.forEach((chat,index)=>{
 
-const friends = await res.json();
+const div=document.createElement("div");
+div.className="chat-item";
+div.innerText=chat.title;
 
-const container = document.getElementById("friendsList");
+div.onclick=()=>{
+currentChat=index;
+chatArea.innerHTML=chat.messages;
+};
 
-container.innerHTML="";
-
-friends.forEach(f=>{
-
-const div = document.createElement("div");
-
-div.className="chat-user";
-
-div.innerHTML=`
-<img src="assets/u1.jpg">
-<span>${f.username || f.name}</span>
-`;
-
-div.onclick=()=>openChat(f.user_id,f.username || f.name);
-
-container.appendChild(div);
+historyList.appendChild(div);
 
 });
 
 }
 
-/* OPEN CHAT */
+/* NEW CHAT */
 
-async function openChat(friendId,name){
+function startNewChat(){
 
-currentFriend = friendId;
+currentChat = chats.length;
 
-document.getElementById("chatName").innerText=name;
+const chat = {
+title:"New Chat "+(chats.length+1),
+messages:""
+};
 
-loadMessages();
+chats.push(chat);
 
-}
+localStorage.setItem("skillforgeChats",JSON.stringify(chats));
 
-/* LOAD MESSAGES */
+loadHistory();
 
-async function loadMessages(){
-
-if(!currentFriend) return;
-
-const res = await fetch(
-"http://localhost:5000/api/messages/"+userId+"/"+currentFriend
-);
-
-const data = await res.json();
-
-const box = document.getElementById("messagesBox");
-
-box.innerHTML="";
-
-data.forEach(m=>{
-
-const div = document.createElement("div");
-
-div.className = "message"+(m.sender==userId?" me":"");
-
-div.innerText=m.message;
-
-box.appendChild(div);
-
-});
-
-box.scrollTop=box.scrollHeight;
+chatArea.innerHTML="";
 
 }
 
 /* SEND MESSAGE */
 
-async function sendMessage(){
-
-const input = document.getElementById("messageInput");
+function sendMessage(){
 
 const text = input.value.trim();
+if(!text) return;
 
-if(!text || !currentFriend) return;
+/* USER MESSAGE */
 
-await fetch("http://localhost:5000/api/send-message",{
+const userMsg = document.createElement("div");
+userMsg.className="message user";
+userMsg.innerText=text;
 
-method:"POST",
-
-headers:{"Content-Type":"application/json"},
-
-body:JSON.stringify({
-sender:userId,
-receiver:currentFriend,
-message:text
-})
-
-});
+chatArea.appendChild(userMsg);
 
 input.value="";
 
-loadMessages();
+/* AI MESSAGE */
+
+const aiMsg = document.createElement("div");
+aiMsg.className="message ai";
+aiMsg.innerText="AI is typing...";
+
+chatArea.appendChild(aiMsg);
+
+chatArea.scrollTop = chatArea.scrollHeight;
+
+/* API CALL */
+
+fetch("http://localhost:5000/api/ai-chat",{
+method:"POST",
+headers:{
+"Content-Type":"application/json"
+},
+body:JSON.stringify({message:text})
+})
+.then(res=>res.json())
+.then(data=>{
+
+aiMsg.innerText=data.reply;
+
+saveChat();
+
+chatArea.scrollTop=chatArea.scrollHeight;
+
+})
+.catch(()=>{
+aiMsg.innerText="AI tutor unavailable";
+});
 
 }
 
-/* AUTO REFRESH */
+/* SAVE CHAT */
 
-setInterval(loadMessages,2000);
+function saveChat(){
+
+if(currentChat===null) return;
+
+chats[currentChat].messages = chatArea.innerHTML;
+
+localStorage.setItem("skillforgeChats",JSON.stringify(chats));
+
+}
+
+/* PROMPT CLICK */
+
+function usePrompt(text){
+input.value=text;
+input.focus();
+}
+
+/* ENTER SEND */
+
+input.addEventListener("keypress",function(e){
+
+if(e.key==="Enter"){
+sendMessage();
+}
+
+});
 
 /* INIT */
 
-loadFriends();
-
-document.getElementById("loading").style.display="none";
+loadHistory();
 
 </script>
 
