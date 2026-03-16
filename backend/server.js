@@ -3,7 +3,7 @@ require("dotenv").config();
 const express = require("express");
 const sqlite3 = require("sqlite3").verbose();
 const bcrypt = require("bcrypt");
-
+const fetch = (...args) => import('node-fetch').then(({default: fetch}) => fetch(...args));
 const cors = require("cors");
 const multer = require("multer");
 const nodemailer = require("nodemailer");
@@ -151,13 +151,22 @@ db.run(`
 CREATE TABLE IF NOT EXISTS test_results(
 id INTEGER PRIMARY KEY AUTOINCREMENT,
 user_id INTEGER,
+course TEXT,
 score INTEGER,
 total INTEGER,
-weakest_domain TEXT,
 date TEXT
 )
 `);
+/* ===== FIX OLD DATABASE (ADD COURSE COLUMN IF MISSING) ===== */
 
+db.run(
+`ALTER TABLE test_results ADD COLUMN course TEXT`,
+(err)=>{
+if(err && !err.message.includes("duplicate column")){
+console.log("Course column error:",err);
+}
+}
+);
 db.run(`
 CREATE TABLE IF NOT EXISTS messages(
 id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -225,17 +234,82 @@ message TEXT,
 date TEXT
 )
 `);
+db.run(`
+ALTER TABLE notifications ADD COLUMN is_read INTEGER DEFAULT 0
+`, (err)=>{
+if(err && !err.message.includes("duplicate column")){
+console.log("Notification column error:",err);
+}
+});
 
+// ================= ADAPTIVE QUIZZES =================
+
+db.run(`
+CREATE TABLE IF NOT EXISTS adaptive_quizzes(
+id INTEGER PRIMARY KEY AUTOINCREMENT,
+course TEXT,
+question TEXT,
+option1 TEXT,
+option2 TEXT,
+option3 TEXT,
+option4 TEXT,
+answer INTEGER
+)
+`);
+
+// ================= FINAL QUIZZES =================
+
+db.run(`
+CREATE TABLE IF NOT EXISTS final_quizzes(
+id INTEGER PRIMARY KEY AUTOINCREMENT,
+course TEXT,
+question TEXT,
+option1 TEXT,
+option2 TEXT,
+option3 TEXT,
+option4 TEXT,
+answer INTEGER
+)
+`);
+/* ================= CREATE NOTIFICATION ================= */
+
+function notifyAllStudents(message){
+
+db.all("SELECT id FROM users",(err,users)=>{
+
+if(err || !users) return;
+
+users.forEach(user=>{
+
+db.run(
+  "INSERT INTO notifications(user_id,message,date,is_read) VALUES (?,?,?,0)",
+  [
+    user.id,
+    message,
+    new Date().toISOString()
+  ]
+);
+
+});
+
+});
+
+}
 // ================= EMAIL CONFIG =================
 
 const otpStore = new Map();
 
 const transporter = nodemailer.createTransport({
-service: "gmail",
+
+host: "smtp.gmail.com",
+port: 587,
+secure: false,
+
 auth: {
 user: process.env.EMAIL_USER,
 pass: process.env.EMAIL_PASS
 }
+
 });
 transporter.verify(function (error, success) {
   if (error) {
@@ -554,59 +628,45 @@ res.json(row || {});
 
 });
 // ================= SAVE TEST RESULT =================
+app.post("/api/save-test-result", authenticateToken, (req, res) => {
 
-app.post("/api/save-test-result",(req,res)=>{
+const { course, score, total, type } = req.body;
+const percentage = (score / total) * 100;
+const date = new Date().toISOString().split("T")[0];
+const userId = req.user.id;
 
-const token=req.headers.authorization?.split(" ")[1];
-if(!token) return res.status(401).json({message:"Unauthorized"});
-
-const decoded=jwt.verify(token,SECRET_KEY);
-
-const {score,total,weakest_domain}=req.body;
-
-const date=new Date().toISOString();
+/* SAVE RESULT */
 
 db.run(
-"INSERT INTO test_results(user_id,score,total,weakest_domain,date) VALUES(?,?,?,?,?)",
-[decoded.id,score,total,weakest_domain,date],
-()=>{
+`INSERT INTO test_results(user_id, course, score, total, date)
+VALUES (?, ?, ?, ?, ?)`,
+[userId, course, score, total, date],
+(err) => {
 
-const percentage = (score/total)*100;
-
-if(percentage >= 60){
-
-db.run(`
-INSERT INTO certificates(user_id,course,date)
-VALUES(?,?,?)
-`,
-[decoded.id,"AI Course",date]);
-
-transporter.sendMail({
-
-from:`"SkillForge" <${process.env.EMAIL_USER}>`,
-
-to:req.headers.email,
-
-subject:"🎉 Certificate Earned",
-
-html:`
-<h2>Congratulations!</h2>
-<p>You successfully completed the course.</p>
-<p>Your certificate is now available in your dashboard.</p>
-`
-
-});
-
+if(err){
+return res.status(500).json({message:"Error saving result"});
 }
 
-res.json({message:"Saved"});
+/* CERTIFICATE ONLY FOR FINAL QUIZ */
 
-}
+if(type === "final" && percentage >= 60){
+
+db.run(
+`INSERT INTO certificates(user_id, course, date)
+VALUES (?, ?, ?)`,
+[userId, course, date]
 );
 
+res.json({message:"Certificate generated"});
+
+}else{
+
+res.json({message:"Result saved"});
+
+}
+
 });
-
-
+});
 // ================= PERFORMANCE =================
 
 app.get("/api/performance",(req,res)=>{
@@ -836,60 +896,77 @@ res.json(rows);
 
 // ================= UPDATE COURSE PROGRESS =================
 
-app.post("/api/update-progress",(req,res)=>{
+app.post("/api/update-progress", authenticateToken, (req,res)=>{
 
-const token=req.headers.authorization?.split(" ")[1];
-if(!token) return res.status(401).json({message:"Unauthorized"});
-
-const decoded=jwt.verify(token,SECRET_KEY);
-
-const {course,module_completed,total_modules}=req.body;
+const {course,module_completed,total_modules} = req.body;
 
 const completed = module_completed >= total_modules ? 1 : 0;
 
-db.run(`
-INSERT OR REPLACE INTO course_progress(user_id,course,module_completed,total_modules,completed)
-VALUES(?,?,?,?,?)
-`,
-[decoded.id,course,module_completed,total_modules,completed],
-()=>{
+db.get(
+"SELECT * FROM course_progress WHERE user_id=? AND course=?",
+[req.user.id,course],
+(err,row)=>{
+
+if(row){
+
+db.run(
+`UPDATE course_progress
+SET module_completed=?, total_modules=?, completed=?
+WHERE user_id=? AND course=?`,
+[module_completed,total_modules,completed,req.user.id,course]
+);
+
+}else{
+
+db.run(
+`INSERT INTO course_progress
+(user_id,course,module_completed,total_modules,completed)
+VALUES(?,?,?,?,?)`,
+[req.user.id,course,module_completed,total_modules,completed]
+);
+
+}
 
 if(completed){
 
-db.run(`
-INSERT INTO notifications(user_id,message,date)
-VALUES(?,?,?)
-`,
+db.run(
+`INSERT INTO notifications(user_id,message,date)
+VALUES(?,?,?)`,
 [
-decoded.id,
+req.user.id,
 `You completed the course: ${course}`,
 new Date().toISOString()
 ]);
 
 }
 
-res.json({message:"Progress updated"});
+res.json({completed});
 
 });
 
 });
 // ================= GET COURSE PROGRESS =================
 
-app.get("/api/course-progress/:course",(req,res)=>{
+app.get("/api/course-progress/:course", authenticateToken, (req,res)=>{
 
-const token=req.headers.authorization?.split(" ")[1];
-if(!token) return res.status(401).json({message:"Unauthorized"});
-
-const decoded=jwt.verify(token,SECRET_KEY);
-
-const course=req.params.course;
+const course = decodeURIComponent(req.params.course).trim();
 
 db.get(
-"SELECT * FROM course_progress WHERE user_id=? AND course=?",
-[decoded.id,course],
+`SELECT completed FROM course_progress
+WHERE user_id=? AND course=?`,
+[req.user.id,course],
 (err,row)=>{
 
-res.json(row);
+if(err){
+console.log(err);
+return res.json({completed:0});
+}
+
+if(!row){
+return res.json({completed:0});
+}
+
+res.json({completed:row.completed});
 
 });
 
@@ -901,25 +978,46 @@ app.get("/api/adaptive-test/:course",(req,res)=>{
 
 const course = req.params.course;
 
-db.all(
-`SELECT 
-id,
-question,
-option1,
-option2,
-option3,
-option4,
-answer
-FROM quizzes
-WHERE course = ?
+db.all(`
+SELECT *
+FROM adaptive_quizzes
+WHERE course=?
 ORDER BY RANDOM()
-LIMIT 20`,
+LIMIT 10
+`,
 [course],
 (err,rows)=>{
 
 if(err){
-console.log("Adaptive test error:",err);
-return res.status(500).json([]);
+console.log(err);
+return res.json([]);
+}
+
+res.json(rows);
+
+});
+
+});
+
+
+// ================= FINAL TEST QUESTIONS =================
+app.get("/api/final-quiz/:course",(req,res)=>{
+
+const course=req.params.course;
+
+db.all(`
+SELECT *
+FROM final_quizzes
+WHERE course=?
+ORDER BY RANDOM()
+LIMIT 20
+`,
+[course],
+(err,rows)=>{
+
+if(err){
+console.log(err);
+return res.json([]);
 }
 
 res.json(rows);
@@ -930,12 +1028,10 @@ res.json(rows);
 // ================= GET AVAILABLE COURSES FOR TESTS =================
 app.get("/api/adaptive-tests",(req,res)=>{
 
-db.all(
-`
-SELECT 
-course,
-COUNT(*) as total_questions
-FROM quizzes
+db.all(`
+SELECT course,
+COUNT(*) as question_count
+FROM adaptive_quizzes
 GROUP BY course
 `,
 [],
@@ -951,7 +1047,6 @@ res.json(rows);
 });
 
 });
-
 // ================= CHECK TEST COMPLETION =================
 app.get("/api/test-completed/:course", authenticateToken,(req,res)=>{
 
@@ -982,6 +1077,22 @@ db.all(
 
 res.json(rows);
 
+});
+
+});
+// ================= MARK NOTIFICATIONS AS READ =================
+app.post("/api/notifications/mark-read",(req,res)=>{
+
+const token=req.headers.authorization?.split(" ")[1];
+if(!token) return res.status(401).json({message:"Unauthorized"});
+
+const decoded=jwt.verify(token,SECRET_KEY);
+
+db.run(
+"UPDATE notifications SET is_read=1 WHERE user_id=?",
+[decoded.id],
+()=>{
+res.json({message:"Notifications marked as read"});
 });
 
 });
@@ -1166,7 +1277,7 @@ res.json(rows);
 });
 
 /* ================= ADMIN MANAGE QUIZZES ================= */
-app.post("/api/admin/add-question",(req,res)=>{
+app.post("/api/admin/add-adaptive-question",(req,res)=>{
 
 const {
 course,
@@ -1179,15 +1290,50 @@ answer
 } = req.body;
 
 db.run(`
-INSERT INTO quizzes
+INSERT INTO adaptive_quizzes
 (course,question,option1,option2,option3,option4,answer)
 VALUES(?,?,?,?,?,?,?)
 `,
 [course,question,option1,option2,option3,option4,answer],
-()=>res.json({message:"Question added"})
-);
+()=>{
+
+notifyAllStudents(`New adaptive quiz added for ${course}`);
+
+res.json({message:"Adaptive question added"});
 
 });
+
+});
+// ================= ADMIN MANAGE FINAL QUIZZES =================
+app.post("/api/admin/add-final-question",(req,res)=>{
+
+const {
+course,
+question,
+option1,
+option2,
+option3,
+option4,
+answer
+} = req.body;
+
+db.run(`
+INSERT INTO final_quizzes
+(course,question,option1,option2,option3,option4,answer)
+VALUES(?,?,?,?,?,?,?)
+`,
+[course,question,option1,option2,option3,option4,answer],
+()=>{
+
+notifyAllStudents(`New final quiz added for ${course}`);
+
+res.json({message:"Final question added"});
+
+});
+
+});
+
+// ================= ADMIN GET QUESTIONS =================
 app.get("/api/admin/questions/:course",(req,res)=>{
 
 db.all(
@@ -1350,7 +1496,7 @@ return res.status(500).json({message:"Upload failed"});
 }
 
 res.json({message:"File uploaded successfully"});
-
+notifyAllStudents(`New notes uploaded for ${course}: ${title}`);
 });
 
 });
@@ -1588,7 +1734,7 @@ videoIndex++;
 });
 
 });
-
+notifyAllStudents(`New course added: ${title}`);
 res.json({message:"Course created successfully"});
 
 });
@@ -1668,6 +1814,67 @@ db.get("SELECT COUNT(*) as online FROM users WHERE online=1",(err,row)=>{
 res.json({online:row.online});
 });
 });
+
+
+
+
+// ================= AI TUTOR =================
+
+app.post("/api/ai-chat", async (req,res)=>{
+
+const {message} = req.body;
+
+if(!message){
+return res.json({reply:"Please ask a question."});
+}
+
+try{
+
+const response = await fetch("http://localhost:11434/api/generate",{
+method:"POST",
+headers:{
+"Content-Type":"application/json"
+},
+body:JSON.stringify({
+model:"phi3",
+prompt: `
+You are an AI tutor for SkillForge, an online learning platform.
+
+Rules:
+- Help students understand course concepts.
+- Explain topics simply.
+- Keep answers short (under 120 words).
+- Focus on learning topics like programming, AI, data science and technology.
+
+Student Question:
+${message}
+
+Answer:
+`,
+stream:false
+})
+});
+
+const data = await response.json();
+
+res.json({
+reply:data.response
+});
+
+}catch(err){
+
+console.log(err);
+
+res.json({
+reply:"AI tutor is currently unavailable."
+});
+
+}
+
+});
+
+
+
 
 // ================= START SERVER =================
 
