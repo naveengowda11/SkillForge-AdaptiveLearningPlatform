@@ -1,52 +1,105 @@
 <!DOCTYPE html>
-
 <html>
 <head>
-<title>Certificate</title>
+<title>SkillForge Certificate</title>
 
 <style>
-body{display:flex;justify-content:center;align-items:center;height:100vh;background:#eee;}
-canvas{border:1px solid #ccc;}
-</style>
 
+body{
+display:flex;
+justify-content:center;
+align-items:center;
+height:100vh;
+background:#eee;
+margin:0;
+flex-direction:column;
+}
+
+canvas{
+border:1px solid #ccc;
+}
+
+.download-btn{
+margin-top:20px;
+padding:10px 20px;
+background:#6c7cff;
+color:white;
+border:none;
+border-radius:6px;
+cursor:pointer;
+}
+
+</style>
 </head>
 
 <body>
 
 <canvas id="certCanvas" width="1200" height="850"></canvas>
 
+<button class="download-btn" onclick="downloadCertificate()">
+Download Certificate
+</button>
+
 <script>
 
 const canvas = document.getElementById("certCanvas");
 const ctx = canvas.getContext("2d");
 
-const name = localStorage.getItem("name");
-const course = localStorage.getItem("selectedCourse");
-
+const studentName = localStorage.getItem("name") || "Student Name";
+const course = localStorage.getItem("selectedCourse") || "Course Title";
 const date = new Date().toLocaleDateString();
 
 const img = new Image();
-img.src="assets/certificate-template.png";
+img.src = "certificate-template.png";
 
-img.onload=function(){
+img.onload = function(){
 
 ctx.drawImage(img,0,0,1200,850);
 
-ctx.font="50px serif";
-ctx.fillStyle="#222";
-ctx.textAlign="center";
+/* STUDENT NAME */
 
-ctx.fillText(name,600,420);
+ctx.font = "38px Georgia";
+ctx.fillStyle = "#1f2f46";
+ctx.textAlign = "center";
 
-ctx.font="40px serif";
-ctx.fillText(course,600,520);
+/* moved slightly down to match the name line */
+ctx.fillText(studentName,460,380);
 
-ctx.font="28px serif";
-ctx.fillText(date,600,580);
+
+/* COURSE TITLE */
+
+ctx.font = "32px Georgia";
+
+/* moved slightly up to match the course line */
+ctx.fillText(course,450,515);
+
+
+/* DATE (leave as it was) */
+
+ctx.font = "22px Georgia";
+ctx.textAlign = "left";
+ctx.fillStyle = "#444";
+
+ctx.fillText(date,195,645);
+
+
+/* SIGNATURE */
+
+ctx.textAlign = "center";
+ctx.font = "24px 'Brush Script MT'";
+
+/* moved left and slightly up so it doesn't touch the badge */
+ctx.fillText("Naveen Kumar B",650,610);
 
 };
 
-</script>
+function downloadCertificate(){
+const link=document.createElement("a");
+link.download="SkillForge-Certificate.png";
+link.href=canvas.toDataURL();
+link.click();
+}
 
+</script>
 </body>
 </html>
