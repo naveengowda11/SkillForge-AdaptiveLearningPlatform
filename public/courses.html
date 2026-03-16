@@ -32,8 +32,6 @@ display:flex;
 overflow:hidden;
 }
 
-/* SIDEBAR */
-
 .sidebar{
 width:80px;
 background:#fff;
@@ -69,15 +67,11 @@ background:#111;
 color:white;
 }
 
-/* CONTENT */
-
 .content{
 flex:1;
 padding:30px;
 overflow:auto;
 }
-
-/* HEADER */
 
 .header{
 display:flex;
@@ -93,15 +87,11 @@ border:1px solid #ddd;
 width:250px;
 }
 
-/* GRID */
-
 .course-grid{
 display:grid;
 grid-template-columns:repeat(auto-fill,minmax(240px,1fr));
 gap:20px;
 }
-
-/* COURSE CARD */
 
 .course-card{
 background:#fff;
@@ -163,8 +153,6 @@ background:#4f5fff;
 
 <div class="container">
 
-<!-- SIDEBAR -->
-
 <div class="sidebar">
 
 <button onclick="location.href='dashboard.html'">
@@ -208,8 +196,6 @@ background:#4f5fff;
 </button>
 
 </div>
-
-<!-- MAIN CONTENT -->
 
 <div class="content">
 
@@ -262,18 +248,11 @@ course.style.display="none";
 
 async function loadCourses(){
 
-try{
-
 const res = await fetch("http://localhost:5000/api/admin/courses");
 const courses = await res.json();
 
 const grid = document.getElementById("courseGrid");
 grid.innerHTML="";
-
-if(!courses || courses.length === 0){
-grid.innerHTML="<p>No courses available yet.</p>";
-return;
-}
 
 courses.forEach(c=>{
 
@@ -298,12 +277,6 @@ grid.appendChild(card);
 
 });
 
-}catch(err){
-
-console.log("Error loading courses",err);
-
-}
-
 }
 
 
@@ -312,14 +285,6 @@ console.log("Error loading courses",err);
 async function enrollCourse(course){
 
 const token = localStorage.getItem("token");
-
-if(!token){
-alert("Session expired. Please login again.");
-window.location.href="login.html";
-return;
-}
-
-try{
 
 const res = await fetch("http://localhost:5000/api/enroll-course",{
 
@@ -342,20 +307,11 @@ if(res.ok){
 
 localStorage.setItem("selectedCourse",course);
 
-/* Redirect directly to course player */
-
 window.location.href="course-player.html";
 
 }else{
 
 alert(data.message);
-
-}
-
-}catch(err){
-
-console.log("Enrollment error",err);
-alert("Enrollment failed");
 
 }
 
