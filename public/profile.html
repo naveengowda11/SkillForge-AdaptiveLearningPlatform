@@ -1,241 +1,419 @@
 <!DOCTYPE html>
-<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>SkillForge Profile</title>
 
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/remixicon@3.5.0/fonts/remixicon.css" rel="stylesheet">
 
 <style>
+
 *{
-  margin:0;
-  padding:0;
-  box-sizing:border-box;
-  font-family:'Inter',sans-serif;
+margin:0;
+padding:0;
+box-sizing:border-box;
+font-family:Inter,sans-serif;
 }
 
 body{
-  background: radial-gradient(circle at 20% 20%, #0f172a, #020617);
-  color:white;
-  min-height:100vh;
-  padding:40px;
+background:linear-gradient(135deg,#c6c4ff,#98c5ff);
+height:100vh;
+display:flex;
+align-items:center;
+justify-content:center;
 }
 
-/* Light mode support */
-body.light-mode{
-  background:#f1f5f9;
-  color:#0f172a;
+.container{
+width:95%;
+height:92vh;
+background:#f6f7fb;
+border-radius:28px;
+display:flex;
+overflow:hidden;
 }
 
-.profile-container{
-  max-width:600px;
-  margin:auto;
+/* SIDEBAR */
+
+.sidebar{
+width:80px;
+background:#fff;
+display:flex;
+flex-direction:column;
+align-items:center;
+padding-top:20px;
+gap:30px;
 }
 
-.profile-card{
-  background:rgba(255,255,255,0.05);
-  padding:30px;
-  border-radius:20px;
-  backdrop-filter:blur(10px);
+.sidebar button{
+width:45px;
+height:45px;
+border:none;
+border-radius:12px;
+background:#f0f2f8;
+cursor:pointer;
 }
 
-.profile-photo-large{
-  width:130px;
-  height:130px;
-  border-radius:50%;
-  object-fit:cover;
-  border:3px solid #3b82f6;
-  margin-bottom:20px;
+/* CONTENT */
+
+.content{
+flex:1;
+padding:30px;
+overflow:auto;
 }
 
-.profile-card h2{
-  margin-bottom:15px;
+/* HEADER */
+
+.profile-header{
+display:flex;
+align-items:center;
+gap:20px;
+background:white;
+padding:25px;
+border-radius:16px;
+margin-bottom:20px;
 }
 
-.profile-card p{
-  margin-bottom:8px;
+.profile-header img{
+width:90px;
+height:90px;
+border-radius:50%;
+object-fit:cover;
 }
 
-button{
-  margin-top:20px;
-  padding:10px 18px;
-  border:none;
-  border-radius:8px;
-  background:linear-gradient(90deg,#06b6d4,#3b82f6);
-  color:white;
-  cursor:pointer;
-  transition:0.3s;
+.profile-info h2{
+margin-bottom:4px;
 }
 
-button:hover{
-  transform:scale(1.05);
+/* STATS */
+
+.stats{
+display:grid;
+grid-template-columns:repeat(4,1fr);
+gap:15px;
+margin-bottom:20px;
 }
 
-form{
-  background:rgba(255,255,255,0.05);
-  padding:30px;
-  border-radius:20px;
-  backdrop-filter:blur(10px);
-  display:none;
+.stat-card{
+background:white;
+padding:18px;
+border-radius:14px;
+text-align:center;
 }
 
-input, textarea{
-  width:100%;
-  margin-bottom:12px;
-  padding:10px;
-  border-radius:8px;
-  border:none;
+/* SECTIONS */
+
+.section{
+background:white;
+padding:25px;
+border-radius:16px;
+margin-bottom:20px;
 }
 
-textarea{
-  resize:none;
-  height:80px;
+.section h3{
+margin-bottom:12px;
 }
+
+/* PROGRESS BAR */
+
+.progress{
+background:#eee;
+height:10px;
+border-radius:6px;
+margin-top:6px;
+}
+
+.progress-fill{
+height:10px;
+background:#6c7cff;
+border-radius:6px;
+}
+
+/* BUTTON */
+
+button.edit{
+background:#6c7cff;
+color:white;
+border:none;
+padding:10px 18px;
+border-radius:8px;
+cursor:pointer;
+}
+
 </style>
 </head>
 
 <body>
 
-<div class="profile-container">
+<div class="container">
 
-  <!-- PROFILE CARD -->
-  <div id="profileView" class="profile-card" style="display:none;">
-    <img id="viewPhoto" class="profile-photo-large" src="assets/default-avatar.png">
-    <h2 id="viewName"></h2>
+<!-- SIDEBAR -->
 
-    <p><strong>Phone:</strong> <span id="viewPhone"></span></p>
-    <p><strong>Education:</strong> <span id="viewEducation"></span></p>
-    <p><strong>University:</strong> <span id="viewUniversity"></span></p>
-    <p><strong>Graduation Year:</strong> <span id="viewGradYear"></span></p>
-    <p><strong>Status:</strong> <span id="viewStatus"></span></p>
-    <p><strong>Current Role:</strong> <span id="viewRole"></span></p>
-    <p><strong>Skills:</strong> <span id="viewSkills"></span></p>
-    <p><strong>Interests:</strong> <span id="viewInterests"></span></p>
-    <p><strong>LinkedIn:</strong> <span id="viewLinkedIn"></span></p>
-    <p><strong>GitHub:</strong> <span id="viewGithub"></span></p>
-    <p><strong>Bio:</strong> <span id="viewBio"></span></p>
+<div class="sidebar">
 
-    <button onclick="showEdit()">Edit Profile</button>
-  </div>
+<button onclick="location.href='dashboard.html'">
+<i class="ri-home-4-line"></i>
+</button>
 
-  <!-- PROFILE FORM -->
-  <form id="profileForm" enctype="multipart/form-data">
-    <input type="file" name="photo">
-    <input type="text" name="phone" placeholder="Phone">
-    <input type="date" name="dob">
-    <input type="text" name="education" placeholder="Highest Education">
-    <input type="text" name="university" placeholder="University">
-    <input type="text" name="graduation_year" placeholder="Graduation Year">
-    <input type="text" name="current_status" placeholder="Student / Working">
-    <input type="text" name="current_role" placeholder="Current Role">
-    <input type="text" name="skills" placeholder="Skills (comma separated)">
-    <input type="text" name="interests" placeholder="Areas of Interest">
-    <input type="text" name="linkedin" placeholder="LinkedIn URL">
-    <input type="text" name="github" placeholder="GitHub URL">
-    <textarea name="bio" placeholder="Short Bio"></textarea>
+<button onclick="location.href='courses.html'">
+<i class="ri-book-open-line"></i>
+</button>
 
-    <button type="submit">Save Profile</button>
-  </form>
+<button onclick="location.href='adaptive-test.html'">
+<i class="ri-brain-line"></i>
+</button>
+
+<button onclick="location.href='performance.html'">
+<i class="ri-bar-chart-line"></i>
+</button>
+
+</div>
+
+<!-- CONTENT -->
+
+<div class="content">
+
+<!-- PROFILE HEADER -->
+
+<div class="profile-header">
+
+<img id="profilePhoto" src="assets/profile.jpg">
+
+<div class="profile-info">
+<h2 id="profileName">Loading...</h2>
+<p id="profileEmail"></p>
+
+<button class="edit" onclick="location.href='edit-profile.html'">
+Edit Profile
+</button>
+</div>
+
+</div>
+
+<!-- STATS -->
+
+<div class="stats">
+
+<div class="stat-card">
+<h3 id="coursesEnrolled">0</h3>
+<p>Courses</p>
+</div>
+
+<div class="stat-card">
+<h3 id="coursesCompleted">0</h3>
+<p>Completed</p>
+</div>
+
+<div class="stat-card">
+<h3 id="certificatesEarned">0</h3>
+<p>Certificates</p>
+</div>
+
+<div class="stat-card">
+<h3 id="leaderboardRank">-</h3>
+<p>Leaderboard Rank</p>
+</div>
+
+</div>
+
+<!-- ABOUT -->
+
+<div class="section">
+
+<h3>About</h3>
+
+<p id="bioText">Loading...</p>
+
+</div>
+
+<!-- EDUCATION -->
+
+<div class="section">
+
+<h3>Education</h3>
+
+<p id="educationText"></p>
+
+<h3>Skills</h3>
+
+<p id="skillsText"></p>
+
+</div>
+
+<!-- COURSE PROGRESS -->
+
+<div class="section">
+
+<h3>Course Progress</h3>
+
+<div id="courseProgress"></div>
+
+</div>
+
+<!-- CERTIFICATES -->
+
+<div class="section">
+
+<h3>Certificates</h3>
+
+<div id="certificateList"></div>
+
+</div>
+
+</div>
 
 </div>
 
 <script>
 
-// APPLY THEME GLOBALLY
-if(localStorage.getItem("theme") === "light"){
-  document.body.classList.add("light-mode");
-}
-
 const token = localStorage.getItem("token");
-if(!token){
-  window.location.href="index.html";
-}
+const userId = localStorage.getItem("userId");
 
-const form = document.getElementById("profileForm");
-const profileView = document.getElementById("profileView");
+/* LOAD PROFILE */
 
 async function loadProfile(){
-  try{
-    const res = await fetch("http://localhost:5000/api/profile",{
-      headers:{ Authorization:"Bearer "+token }
-    });
 
-    if(!res.ok){
-      form.style.display="block";
-      return;
-    }
-
-    const data = await res.json();
-    if(!data){
-      form.style.display="block";
-      return;
-    }
-
-    profileView.style.display="block";
-
-    document.getElementById("viewPhoto").src =
-      data.photo ? "http://localhost:5000/"+data.photo :
-      "assets/default-avatar.png";
-
-    document.getElementById("viewName").innerText =
-      localStorage.getItem("name");
-
-    document.getElementById("viewPhone").innerText = data.phone || "-";
-    document.getElementById("viewEducation").innerText = data.education || "-";
-    document.getElementById("viewUniversity").innerText = data.university || "-";
-    document.getElementById("viewGradYear").innerText = data.graduation_year || "-";
-    document.getElementById("viewStatus").innerText = data.current_status || "-";
-    document.getElementById("viewRole").innerText = data.current_role || "-";
-    document.getElementById("viewSkills").innerText = data.skills || "-";
-    document.getElementById("viewInterests").innerText = data.interests || "-";
-    document.getElementById("viewLinkedIn").innerText = data.linkedin || "-";
-    document.getElementById("viewGithub").innerText = data.github || "-";
-    document.getElementById("viewBio").innerText = data.bio || "-";
-
-    // Pre-fill form
-    Object.keys(data).forEach(key=>{
-      if(form.elements[key] && key !== "photo"){
-        form.elements[key].value = data[key] || "";
-      }
-    });
-
-  }catch(err){
-    form.style.display="block";
-  }
-}
-
-loadProfile();
-
-function showEdit(){
-  profileView.style.display="none";
-  form.style.display="block";
-}
-
-form.addEventListener("submit", async (e)=>{
-  e.preventDefault();
-
-  const formData = new FormData(form);
-
-  try{
-    const res = await fetch("http://localhost:5000/api/profile",{
-      method:"POST",
-      headers:{ Authorization:"Bearer "+token },
-      body:formData
-    });
-
-    if(res.ok){
-      alert("Profile Updated Successfully");
-      window.location.href="dashboard.html";
-    }else{
-      alert("Error saving profile");
-    }
-
-  }catch(err){
-    alert("Server error");
-  }
+const res = await fetch(
+"http://localhost:5000/api/profile",
+{
+headers:{Authorization:"Bearer "+token}
 });
+
+const data = await res.json();
+
+profileName.innerText = data.name || localStorage.getItem("name");
+profileEmail.innerText = data.email || "";
+
+bioText.innerText = data.bio || "No bio added yet.";
+educationText.innerText = data.education || "-";
+skillsText.innerText = data.skills || "-";
+
+if(data.photo){
+profilePhoto.src =
+"http://localhost:5000/"+data.photo.replace(/\\/g,"/");
+}
+
+}
+
+/* LOAD STATS */
+
+async function loadStats(){
+
+const res = await fetch(
+`http://localhost:5000/api/profile-stats/${userId}`
+);
+
+const data = await res.json();
+
+coursesEnrolled.innerText = data.enrolled || 0;
+coursesCompleted.innerText = data.completed || 0;
+certificatesEarned.innerText = data.certificates || 0;
+leaderboardRank.innerText = data.rank || "-";
+
+}
+
+/* LOAD COURSE PROGRESS */
+
+async function loadProgress(){
+
+const res = await fetch(
+"http://localhost:5000/api/admin/courses"
+);
+
+const courses = await res.json();
+
+const container = document.getElementById("courseProgress");
+
+container.innerHTML="";
+
+for(const c of courses){
+
+const progressRes = await fetch(
+`http://localhost:5000/api/course-progress/${c.title}`,
+{
+headers:{Authorization:"Bearer "+token}
+});
+
+const progress = await progressRes.json();
+
+if(!progress) continue;
+
+const percent =
+Math.floor((progress.module_completed/progress.total_modules)*100);
+
+container.innerHTML+=`
+
+<div style="margin-bottom:12px">
+
+<b>${c.title}</b>
+
+<div class="progress">
+<div class="progress-fill" style="width:${percent}%"></div>
+</div>
+
+<span>${percent}% complete</span>
+
+</div>
+
+`;
+
+}
+
+}
+
+/* LOAD CERTIFICATES */
+
+async function loadCertificates(){
+
+const res = await fetch(
+`http://localhost:5000/api/certificates/${userId}`
+);
+
+const certs = await res.json();
+
+const container = document.getElementById("certificateList");
+
+container.innerHTML="";
+
+if(!certs || certs.length===0){
+
+container.innerHTML="<p>No certificates yet</p>";
+return;
+
+}
+
+certs.forEach(c=>{
+
+container.innerHTML+=`
+
+<div style="margin-bottom:10px">
+
+<b>${c.course}</b><br>
+Completed on ${new Date(c.date).toLocaleDateString()}
+
+</div>
+
+`;
+
+});
+
+}
+
+/* INIT */
+
+async function init(){
+
+await loadProfile();
+
+await loadStats();
+
+await loadProgress();
+
+await loadCertificates();
+
+}
+
+init();
+
 </script>
 
 </body>
