@@ -6,6 +6,8 @@
 
 <link href="https://cdn.jsdelivr.net/npm/remixicon@3.5.0/fonts/remixicon.css" rel="stylesheet">
 
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
 <style>
 
 *{
@@ -108,6 +110,18 @@ margin-top:8px;
 color:#555;
 }
 
+.graph-card{
+margin-top:30px;
+background:#fff;
+padding:25px;
+border-radius:18px;
+}
+
+.feed-item{
+padding:10px;
+border-bottom:1px solid #eee;
+}
+
 </style>
 </head>
 
@@ -136,6 +150,11 @@ color:#555;
 <button onclick="location.href='admin-analytics.html'">
 <i class="ri-bar-chart-line"></i>
 </button>
+
+<button onclick="location.href='admin-users.html'">
+<i class="ri-group-line"></i>
+</button>
+
 <button onclick="logout()">
 <i class="ri-logout-box-line"></i>
 </button>
@@ -167,6 +186,41 @@ color:#555;
 
 </div>
 
+<!-- STUDENTS GRAPH -->
+
+<div class="graph-card">
+<h3>Students Overview</h3>
+<canvas id="studentsChart"></canvas>
+</div>
+
+<!-- COURSES GRAPH -->
+
+<div class="graph-card">
+<h3>Courses Overview</h3>
+<canvas id="coursesChart"></canvas>
+</div>
+
+<!-- TESTS GRAPH -->
+
+<div class="graph-card">
+<h3>Tests Activity</h3>
+<canvas id="testsChart"></canvas>
+</div>
+
+<!-- ACTIVE TIME GRAPH -->
+
+<div class="graph-card">
+<h3>Student Active Time</h3>
+<canvas id="activityTimeChart"></canvas>
+</div>
+
+<!-- LIVE ACTIVITY FEED -->
+
+<div class="graph-card">
+<h3>Live Platform Activity</h3>
+<div id="liveFeed"></div>
+</div>
+
 </div>
 
 </div>
@@ -183,6 +237,125 @@ const data = await res.json();
 document.getElementById("users").innerText = data.users;
 document.getElementById("courses").innerText = data.courses;
 document.getElementById("tests").innerText = data.tests;
+
+/* STUDENTS GRAPH */
+
+new Chart(document.getElementById("studentsChart"),{
+
+type:"line",
+
+data:{
+labels:["Students"],
+datasets:[{
+data:[data.users],
+borderColor:"#6c7cff",
+backgroundColor:"rgba(108,124,255,0.2)",
+fill:true,
+tension:0.4
+}]
+},
+
+options:{plugins:{legend:{display:false}}}
+
+});
+
+/* COURSES GRAPH */
+
+new Chart(document.getElementById("coursesChart"),{
+
+type:"line",
+
+data:{
+labels:["Courses"],
+datasets:[{
+data:[data.courses],
+borderColor:"#8b9bff",
+backgroundColor:"rgba(139,155,255,0.2)",
+fill:true,
+tension:0.4
+}]
+},
+
+options:{plugins:{legend:{display:false}}}
+
+});
+
+/* TESTS GRAPH */
+
+new Chart(document.getElementById("testsChart"),{
+
+type:"line",
+
+data:{
+labels:["Tests"],
+datasets:[{
+data:[data.tests],
+borderColor:"#4f5fff",
+backgroundColor:"rgba(79,95,255,0.2)",
+fill:true,
+tension:0.4
+}]
+},
+
+options:{plugins:{legend:{display:false}}}
+
+});
+
+/* ACTIVE HOURS GRAPH */
+
+try{
+
+const res2 = await fetch("http://localhost:5000/api/admin/active-hours");
+const hours = await res2.json();
+
+new Chart(document.getElementById("activityTimeChart"),{
+
+type:"line",
+
+data:{
+labels:hours.map(x=>x.hour),
+datasets:[{
+data:hours.map(x=>x.count),
+borderColor:"#6c7cff",
+backgroundColor:"rgba(108,124,255,0.2)",
+fill:true,
+tension:0.4
+}]
+},
+
+options:{plugins:{legend:{display:false}}}
+
+});
+
+}catch(err){
+console.log("Active hours load failed");
+}
+
+/* LIVE FEED */
+
+try{
+
+const res3 = await fetch("http://localhost:5000/api/admin/activity-feed");
+const activities = await res3.json();
+
+const feed = document.getElementById("liveFeed");
+
+feed.innerHTML="";
+
+activities.forEach(a=>{
+
+feed.innerHTML+=`
+<div class="feed-item">
+<b>${a.user}</b> ${a.action}
+<span style="color:#777;font-size:12px">${a.time}</span>
+</div>
+`;
+
+});
+
+}catch(err){
+console.log("Activity feed error");
+}
 
 }
 
