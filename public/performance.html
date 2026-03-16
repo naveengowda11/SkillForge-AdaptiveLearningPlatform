@@ -8,15 +8,60 @@
 
 <style>
 
+*{
+margin:0;
+padding:0;
+box-sizing:border-box;
+font-family:Inter,sans-serif;
+}
+
 body{
-font-family:Arial;
-background:#e6edf6;
-padding:40px;
+background:linear-gradient(135deg,#c6c4ff,#98c5ff);
+height:100vh;
+display:flex;
+align-items:center;
+justify-content:center;
 }
 
 .container{
-max-width:1200px;
-margin:auto;
+width:95%;
+height:92vh;
+background:#f6f7fb;
+border-radius:28px;
+display:flex;
+overflow:hidden;
+}
+
+.sidebar{
+width:80px;
+background:#fff;
+display:flex;
+flex-direction:column;
+align-items:center;
+padding-top:20px;
+gap:28px;
+}
+
+.sidebar button{
+width:45px;
+height:45px;
+border:none;
+border-radius:12px;
+background:#f0f2f8;
+cursor:pointer;
+display:flex;
+align-items:center;
+justify-content:center;
+}
+
+.content{
+flex:1;
+padding:30px;
+overflow:auto;
+}
+
+.header{
+margin-bottom:20px;
 }
 
 .grid{
@@ -35,23 +80,20 @@ gap:25px;
 .card{
 background:white;
 padding:20px;
-border-radius:12px;
-box-shadow:0 4px 20px rgba(0,0,0,0.05);
-}
-
-h3{
-margin-bottom:10px;
+border-radius:18px;
+box-shadow:0 6px 20px rgba(0,0,0,0.05);
 }
 
 .small{
 font-size:14px;
 color:#777;
+margin-bottom:10px;
 }
 
 .exercise{
 display:flex;
 justify-content:space-between;
-margin:15px 0;
+margin:12px 0;
 }
 
 .circle{
@@ -66,18 +108,62 @@ margin:auto;
 
 <div class="container">
 
+<div class="sidebar">
+<button class="active"><i class="ri-home-4-line"></i></button>
+
+<button onclick="location.href='courses.html'">
+<i class="ri-book-open-line"></i>
+</button>
+
+<button onclick="location.href='adaptive-test.html'">
+<i class="ri-brain-line"></i>
+</button>
+
+<button onclick="location.href='performance.html'">
+<i class="ri-bar-chart-line"></i>
+</button>
+
+<button onclick="location.href='files.html'">
+<i class="ri-file-text-line"></i>
+</button>
+
+<button onclick="location.href='certificates.html'">
+<i class="ri-award-line"></i>
+</button>
+
+<button onclick="location.href='messages.html'">
+<i class="ri-message-2-line"></i>
+</button>
+
+<button onclick="location.href='notifications.html'">
+<i class="ri-notification-3-line"></i>
+</button>
+
+<button onclick="location.href='leaderboard.html'">
+<i class="ri-trophy-line"></i>
+</button>
+
+<button onclick="location.href='settings.html'">
+<i class="ri-settings-3-line"></i>
+</button>
+
+</div>
+
+<div class="content">
+
+<div class="header">
+<h2>Learning Performance</h2>
+</div>
+
 <div class="grid">
 
 <div class="card">
 <h3>Learning Overview</h3>
 <p class="small">Tracks your progress</p>
-
 <canvas id="progressChart"></canvas>
-
 </div>
 
 <div class="card">
-
 <h3>Average Performance</h3>
 <p class="small">Your overall score</p>
 
@@ -89,23 +175,16 @@ margin:auto;
 
 </div>
 
-
 <div class="grid3">
 
 <div class="card">
-
 <h3>Skill Developed</h3>
-
 <canvas id="skillChart"></canvas>
-
 </div>
 
 <div class="card">
-
 <h3>Study Time</h3>
-
 <canvas id="studyChart"></canvas>
-
 </div>
 
 <div class="card">
@@ -143,6 +222,8 @@ margin:auto;
 
 </div>
 
+</div>
+
 <script>
 
 const token = localStorage.getItem("token");
@@ -155,11 +236,12 @@ headers:{ Authorization:"Bearer "+token }
 
 const data = await res.json();
 
-const scores = data.map(x => (x.score/x.total)*100);
+/* TEST SCORES */
 
+const scores = data.map(x => (x.score/x.total)*100);
 const labels = data.map((x,i)=> "Test "+(i+1));
 
-/* Progress Line Chart */
+/* Progress Chart */
 
 new Chart(document.getElementById("progressChart"),{
 type:"line",
@@ -168,8 +250,8 @@ labels:labels,
 datasets:[{
 label:"Score %",
 data:scores,
-borderColor:"#3b82f6",
-backgroundColor:"rgba(59,130,246,0.2)",
+borderColor:"#6c7cff",
+backgroundColor:"rgba(108,124,255,0.2)",
 tension:0.4
 }]
 }
@@ -177,56 +259,80 @@ tension:0.4
 
 /* Average Performance */
 
-const avg = scores.reduce((a,b)=>a+b,0)/scores.length;
+const avg = scores.length
+? scores.reduce((a,b)=>a+b,0)/scores.length
+: 0;
 
 new Chart(document.getElementById("averageChart"),{
 type:"doughnut",
 data:{
 datasets:[{
 data:[avg,100-avg],
-backgroundColor:["#3b82f6","#e5e7eb"]
+backgroundColor:["#6c7cff","#e5e7eb"]
 }]
 },
-options:{
-cutout:"70%"
-}
+options:{cutout:"70%"}
 });
 
-/* Radar Skills */
+/* Skill Radar */
 
-const domains={
-ML:0,
-DL:0,
-NLP:0,
-Math:0,
-Coding:0
-};
+/* REAL SKILL DATA */
 
-data.forEach(r=>{
-domains[r.weakest_domain]++;
+const skillRes = await fetch("http://localhost:5000/api/skill-progress",{
+headers:{ Authorization:"Bearer "+token }
 });
+
+const skillData = await skillRes.json();
+
+const skillLabels = skillData.map(s=>s.domain);
+const skillScores = skillData.map(s=>s.score);
 
 new Chart(document.getElementById("skillChart"),{
 type:"radar",
 data:{
-labels:Object.keys(domains),
+labels:skillLabels,
 datasets:[{
-label:"Weak Areas",
-data:Object.values(domains),
-backgroundColor:"rgba(59,130,246,0.2)",
-borderColor:"#3b82f6"
+label:"Skill Level",
+data:skillScores,
+backgroundColor:"rgba(108,124,255,0.2)",
+borderColor:"#6c7cff"
 }]
+},
+options:{
+scales:{
+r:{
+suggestedMin:0,
+suggestedMax:100
+}
+}
 }
 });
 
-/* Study Time Dummy Chart */
+/* UPDATE EXERCISE SCORES */
+
+document.getElementById("mlScore").innerText = domains.ML;
+document.getElementById("dlScore").innerText = domains.DL;
+document.getElementById("nlpScore").innerText = domains.NLP;
+document.getElementById("mathScore").innerText = domains.Math;
+document.getElementById("codingScore").innerText = domains.Coding;
+
+/* STUDY TIME FROM BACKEND */
+
+const studyRes = await fetch("http://localhost:5000/api/study-time",{
+headers:{ Authorization:"Bearer "+token }
+});
+
+const study = await studyRes.json();
+
+const studyLabels = study.map(x=>x.day);
+const studyHours = study.map(x=>x.hours);
 
 new Chart(document.getElementById("studyChart"),{
 type:"bar",
 data:{
-labels:["Mon","Tue","Wed","Thu","Fri"],
+labels:studyLabels,
 datasets:[{
-data:[2,3,4,3,5],
+data:studyHours,
 backgroundColor:"#22c55e"
 }]
 }
