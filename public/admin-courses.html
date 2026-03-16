@@ -1,21 +1,14 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-<meta charset="UTF-8">
-<title>SkillForge Admin Dashboard</title>
+<title>Manage Courses</title>
 
 <link href="https://cdn.jsdelivr.net/npm/remixicon@3.5.0/fonts/remixicon.css" rel="stylesheet">
 
 <style>
 
-*{
-margin:0;
-padding:0;
-box-sizing:border-box;
-font-family:Inter,sans-serif;
-}
-
 body{
+font-family:Inter;
 background:linear-gradient(135deg,#c6c4ff,#98c5ff);
 height:100vh;
 display:flex;
@@ -32,7 +25,7 @@ display:flex;
 overflow:hidden;
 }
 
-/* SIDEBAR */
+/* SIDEBAR FIXED */
 
 .sidebar{
 width:80px;
@@ -69,43 +62,54 @@ background:#111;
 color:white;
 }
 
-/* CONTENT */
-
 .content{
 flex:1;
 padding:30px;
 overflow:auto;
 }
 
-.header{
+.card{
+background:white;
+padding:20px;
+border-radius:18px;
+margin-bottom:20px;
+}
+
+input,textarea{
+width:100%;
+padding:10px;
+margin-top:8px;
+margin-bottom:10px;
+border-radius:8px;
+border:1px solid #ddd;
+}
+
+button.add{
+background:#6c7cff;
+color:white;
+border:none;
+padding:10px 16px;
+border-radius:8px;
+cursor:pointer;
+}
+
+button.small{
+margin-top:8px;
+padding:6px 10px;
+border:none;
+border-radius:6px;
+cursor:pointer;
+background:#6c7cff;
+color:white;
+}
+
+.course{
 display:flex;
 justify-content:space-between;
-align-items:center;
-margin-bottom:30px;
-}
-
-.grid{
-display:grid;
-grid-template-columns:repeat(3,1fr);
-gap:20px;
-}
-
-.card{
-background:#fff;
-padding:25px;
-border-radius:18px;
-box-shadow:0 8px 20px rgba(0,0,0,0.05);
-text-align:center;
-}
-
-.card h2{
-font-size:36px;
-color:#6c7cff;
-}
-
-.card p{
-margin-top:8px;
-color:#555;
+background:#eef1ff;
+padding:12px;
+border-radius:10px;
+margin-top:10px;
 }
 
 </style>
@@ -117,11 +121,15 @@ color:#555;
 
 <div class="sidebar">
 
-<button class="active">
+<button onclick="location.href='admin-dashboard.html'">
 <i class="ri-dashboard-line"></i>
 </button>
 
-<button onclick="location.href='admin-courses.html'">
+<button onclick="location.href='admin-course-library.html'">
+<i class="ri-book-2-line"></i>
+</button>
+
+<button class="active">
 <i class="ri-book-open-line"></i>
 </button>
 
@@ -133,38 +141,48 @@ color:#555;
 <i class="ri-chat-3-line"></i>
 </button>
 
-<button onclick="location.href='admin-analytics.html'">
-<i class="ri-bar-chart-line"></i>
+<button onclick="location.href='admin-users.html'">
+<i class="ri-group-line"></i>
 </button>
-<button onclick="logout()">
-<i class="ri-logout-box-line"></i>
-</button>
-<i class="ri-user-line"></i>
+
 </div>
 
 <div class="content">
 
-<div class="header">
-<h1>Admin Dashboard</h1>
-</div>
-
-<div class="grid">
+<h1>Manage Courses</h1>
 
 <div class="card">
-<h2 id="users">0</h2>
-<p>Total Students</p>
+
+<h3>Add Course</h3>
+
+<input id="title" placeholder="Course Title">
+<textarea id="description" placeholder="Course Description"></textarea>
+<input id="category" placeholder="Course Category">
+<input type="file" id="video">
+
+<h4>Course Outcomes</h4>
+<div id="outcomes"></div>
+<button class="small" onclick="addOutcome()">Add Outcome</button>
+
+<h4>Modules</h4>
+<div id="modules"></div>
+<button class="small" onclick="addModule()">Add Module</button>
+
+<!-- ================= FINAL QUIZ SECTION (NEW) ================= -->
+
+<h4>Final Quiz Questions</h4>
+<div id="finalQuiz"></div>
+<button class="small" onclick="addQuizQuestion()">Add Quiz Question</button>
+
+<br><br>
+
+<button class="add" onclick="addCourse()">Add Course</button>
+
 </div>
 
 <div class="card">
-<h2 id="courses">0</h2>
-<p>Total Courses</p>
-</div>
-
-<div class="card">
-<h2 id="tests">0</h2>
-<p>Total Tests Taken</p>
-</div>
-
+<h3>Courses</h3>
+<div id="courseList"></div>
 </div>
 
 </div>
@@ -173,25 +191,261 @@ color:#555;
 
 <script>
 
-const token = localStorage.getItem("token");
+/* ================= OUTCOME ================= */
 
-async function loadStats(){
+function addOutcome(){
 
-const res = await fetch("http://localhost:5000/api/admin/stats");
-const data = await res.json();
+const input=document.createElement("input");
+input.placeholder="What student will learn";
 
-document.getElementById("users").innerText = data.users;
-document.getElementById("courses").innerText = data.courses;
-document.getElementById("tests").innerText = data.tests;
+document.getElementById("outcomes").appendChild(input);
 
 }
 
-function logout(){
-localStorage.removeItem("token");
-window.location.href="login.html";
+/* ================= MODULE ================= */
+
+function addModule(){
+
+const div=document.createElement("div");
+
+div.innerHTML=`
+<input class="moduleTitle" placeholder="Module Title">
+
+<div class="lessons"></div>
+
+<button class="small" onclick="addLesson(this)">
+Add Lesson
+</button>
+`;
+
+document.getElementById("modules").appendChild(div);
+
 }
 
-loadStats();
+/* ================= LESSON ================= */
+
+function addLesson(btn){
+
+const container=btn.previousElementSibling;
+
+const div=document.createElement("div");
+
+div.innerHTML=`
+<input class="lessonTitle" placeholder="Lesson Title">
+<input type="file" class="lessonVideo" accept="video/*">
+`;
+
+container.appendChild(div);
+
+}
+
+/* ================= FINAL QUIZ ================= */
+
+function addQuizQuestion(){
+
+const div=document.createElement("div");
+
+div.innerHTML=`
+<input class="quizQuestion" placeholder="Question">
+
+<input class="quizO1" placeholder="Option 1">
+<input class="quizO2" placeholder="Option 2">
+<input class="quizO3" placeholder="Option 3">
+<input class="quizO4" placeholder="Option 4">
+
+<input class="quizAnswer" placeholder="Correct option number (1-4)">
+`;
+
+document.getElementById("finalQuiz").appendChild(div);
+
+}
+
+/* ================= LOAD COURSES ================= */
+
+async function loadCourses(){
+
+const res=await fetch("http://localhost:5000/api/admin/courses");
+
+const courses=await res.json();
+
+const box=document.getElementById("courseList");
+
+box.innerHTML="";
+
+courses.forEach(course=>{
+
+box.innerHTML+=`
+<div class="course">
+
+<div>
+<h3>${course.title}</h3>
+<p>${course.description}</p>
+</div>
+
+<button onclick="deleteCourse(${course.id})">
+Delete
+</button>
+
+</div>
+`;
+
+});
+
+}
+
+/* ================= ADD COURSE ================= */
+
+async function addCourse(){
+
+const title=document.getElementById("title").value;
+const description=document.getElementById("description").value;
+const category=document.getElementById("category").value;
+const video=document.getElementById("video").files[0];
+
+if(!title || !description){
+alert("Please enter course details");
+return;
+}
+
+const outcomes=[
+...document.querySelectorAll("#outcomes input")
+].map(i=>i.value).filter(v=>v.trim()!=="");
+
+const modules=[];
+
+document.querySelectorAll("#modules > div").forEach(module=>{
+
+const moduleTitle=module.querySelector(".moduleTitle").value;
+
+const lessons=[];
+
+module.querySelectorAll(".lessons > div").forEach(lesson=>{
+
+const title=lesson.querySelector(".lessonTitle").value;
+
+lessons.push({title});
+
+});
+
+modules.push({
+title:moduleTitle,
+lessons
+});
+
+});
+
+const formData=new FormData();
+
+formData.append("title",title);
+formData.append("description",description);
+formData.append("category",category);
+
+if(video){
+formData.append("video",video);
+}
+
+formData.append("outcomes",JSON.stringify(outcomes));
+formData.append("modules",JSON.stringify(modules));
+
+let videoIndex=0;
+
+document.querySelectorAll(".lessonVideo").forEach(input=>{
+
+if(input.files[0]){
+
+formData.append(
+"lessonVideo"+videoIndex,
+input.files[0]
+);
+
+videoIndex++;
+
+}
+
+});
+
+try{
+
+const res=await fetch(
+"http://localhost:5000/api/admin/add-course",
+{
+method:"POST",
+body:formData
+}
+);
+
+const data=await res.json();
+
+alert(data.message || "Course added");
+
+/* ================= SAVE FINAL QUIZ ================= */
+
+const quizQuestions=[];
+
+document.querySelectorAll("#finalQuiz > div").forEach(q=>{
+
+quizQuestions.push({
+
+course:title,
+question:q.querySelector(".quizQuestion").value,
+option1:q.querySelector(".quizO1").value,
+option2:q.querySelector(".quizO2").value,
+option3:q.querySelector(".quizO3").value,
+option4:q.querySelector(".quizO4").value,
+answer:q.querySelector(".quizAnswer").value
+
+});
+
+});
+
+for(const q of quizQuestions){
+
+await fetch("http://localhost:5000/api/admin/add-final-question",{
+
+method:"POST",
+
+headers:{
+"Content-Type":"application/json"
+},
+
+body:JSON.stringify(q)
+
+});
+
+}
+
+alert("Course and Final Quiz added successfully");
+
+loadCourses();
+
+}catch(err){
+
+alert("Upload failed");
+
+}
+
+}
+
+/* ================= DELETE COURSE ================= */
+
+async function deleteCourse(id){
+
+if(!confirm("Delete this course?")) return;
+
+await fetch(
+`http://localhost:5000/api/admin/course/${id}`,
+{
+method:"DELETE"
+}
+);
+
+loadCourses();
+
+}
+
+/* ================= INIT ================= */
+
+loadCourses();
 
 </script>
 
