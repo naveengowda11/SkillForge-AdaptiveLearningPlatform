@@ -2,14 +2,30 @@
 
 <html lang="en">
 <head>
+
 <meta charset="UTF-8">
 <title>Sign Up - SkillForge</title>
-
-<link rel="stylesheet" href="style.css">
 
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
 
 <style>
+
+*{
+margin:0;
+padding:0;
+box-sizing:border-box;
+font-family:Inter,sans-serif;
+}
+
+body{
+background:linear-gradient(135deg,#c6c4ff,#98c5ff);
+height:100vh;
+display:flex;
+align-items:center;
+justify-content:center;
+}
+
+/* Loading */
 
 .loading-screen{
 position:fixed;
@@ -43,11 +59,99 @@ margin-right:10px;
 100%{transform:rotate(360deg);}
 }
 
+/* Card */
+
+.auth-wrapper{
+width:100%;
+display:flex;
+justify-content:center;
+align-items:center;
+}
+
+.auth-card{
+
+background:#fff;
+width:420px;
+padding:40px;
+border-radius:20px;
+box-shadow:0 10px 30px rgba(0,0,0,0.08);
+text-align:center;
+
+}
+
+.auth-card h2{
+font-size:28px;
+margin-bottom:5px;
+}
+
+.auth-sub{
+color:#666;
+margin-bottom:25px;
+}
+
+/* Inputs */
+
+.auth-form{
+display:flex;
+flex-direction:column;
+gap:15px;
+}
+
+.auth-form input{
+
+padding:12px;
+border-radius:10px;
+border:1px solid #ddd;
+outline:none;
+font-size:14px;
+
+}
+
+.auth-form input:focus{
+border-color:#6c7cff;
+}
+
+/* Buttons */
+
+.primary-btn{
+
+background:#111;
+color:white;
+border:none;
+padding:12px;
+border-radius:10px;
+cursor:pointer;
+font-weight:500;
+
+}
+
+.primary-btn:hover{
+opacity:0.9;
+}
+
+.full-btn{
+width:100%;
+}
+
+/* Link */
+
+.auth-link{
+margin-top:18px;
+font-size:14px;
+color:#555;
+}
+
+.auth-link a{
+color:#6c7cff;
+text-decoration:none;
+font-weight:500;
+}
+
 </style>
 
 </head>
 
-<body class="auth-body">
+<body>
 
 <div class="loading-screen" id="loadingScreen">
 <div class="spinner"></div>
@@ -59,7 +163,7 @@ Processing...
 <div class="auth-card">
 
 <h2>Create Account</h2>
-<p class="auth-sub">Start your adaptive AI journey today</p>
+<p class="auth-sub">Start your AI learning journey</p>
 
 <form class="auth-form">
 
@@ -97,6 +201,7 @@ Already have an account?
 </p>
 
 </div>
+
 </div>
 
 <script>
@@ -109,11 +214,9 @@ if(theme === "dark"){
 document.body.classList.add("dark");
 }
 
-
 /* ================= LOADING ================= */
 
 const loading = document.getElementById("loadingScreen");
-
 
 /* ================= OTP SEND ================= */
 
@@ -167,7 +270,6 @@ alert("Server error");
 
 }
 
-
 /* ================= OTP VERIFY ================= */
 
 async function verifyOTP(){
@@ -219,7 +321,6 @@ alert("Server error");
 
 }
 
-
 /* ================= REGISTER ================= */
 
 const form = document.querySelector(".auth-form");
@@ -232,7 +333,6 @@ const name = document.getElementById("name").value;
 const email = document.getElementById("email").value;
 const password = document.getElementById("password").value;
 const confirmPassword = document.getElementById("confirmPassword").value;
-
 
 if(password.length < 6){
 
@@ -271,7 +371,6 @@ loading.style.display="none";
 if(res.ok){
 
 alert("Registration successful!");
-
 window.location.href="login.html";
 
 }else{
