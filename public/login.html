@@ -2,14 +2,30 @@
 
 <html lang="en">
 <head>
+
 <meta charset="UTF-8">
 <title>Login - SkillForge</title>
-
-<link rel="stylesheet" href="style.css">
 
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
 
 <style>
+
+*{
+margin:0;
+padding:0;
+box-sizing:border-box;
+font-family:Inter,sans-serif;
+}
+
+body{
+background:linear-gradient(135deg,#c6c4ff,#98c5ff);
+height:100vh;
+display:flex;
+align-items:center;
+justify-content:center;
+}
+
+/* Loading Screen */
 
 .loading-screen{
 position:fixed;
@@ -43,11 +59,151 @@ margin-right:10px;
 100%{transform:rotate(360deg);}
 }
 
+/* Auth Layout */
+
+.auth-wrapper{
+width:100%;
+display:flex;
+justify-content:center;
+align-items:center;
+}
+
+.auth-card{
+
+background:#fff;
+width:420px;
+padding:40px;
+border-radius:20px;
+box-shadow:0 10px 30px rgba(0,0,0,0.08);
+text-align:center;
+
+}
+
+.auth-card h2{
+font-size:28px;
+margin-bottom:5px;
+}
+
+.auth-sub{
+color:#666;
+margin-bottom:25px;
+}
+
+/* Inputs */
+
+.auth-form{
+display:flex;
+flex-direction:column;
+gap:15px;
+}
+
+.auth-form input{
+
+padding:12px;
+border-radius:10px;
+border:1px solid #ddd;
+outline:none;
+font-size:14px;
+
+}
+
+.auth-form input:focus{
+border-color:#6c7cff;
+}
+
+/* Buttons */
+
+.primary-btn{
+
+background:#111;
+color:white;
+border:none;
+padding:12px;
+border-radius:10px;
+cursor:pointer;
+font-weight:500;
+
+}
+
+.primary-btn:hover{
+opacity:0.9;
+}
+
+.full-btn{
+width:100%;
+}
+
+/* Divider */
+
+.auth-divider{
+margin:20px 0;
+position:relative;
+text-align:center;
+color:#888;
+font-size:14px;
+}
+
+.auth-divider::before,
+.auth-divider::after{
+content:"";
+position:absolute;
+top:50%;
+width:40%;
+height:1px;
+background:#ddd;
+}
+
+.auth-divider::before{
+left:0;
+}
+
+.auth-divider::after{
+right:0;
+}
+
+/* Google Button */
+
+.google-btn{
+
+width:100%;
+padding:12px;
+border-radius:10px;
+border:1px solid #ddd;
+background:#fff;
+cursor:pointer;
+font-weight:500;
+
+}
+
+/* Links */
+
+.auth-link{
+margin-top:18px;
+font-size:14px;
+color:#555;
+}
+
+.auth-link a{
+color:#6c7cff;
+text-decoration:none;
+font-weight:500;
+}
+
+.forgot{
+margin-top:10px;
+font-size:14px;
+}
+
+.forgot a{
+color:#6c7cff;
+text-decoration:none;
+}
+
 </style>
 
 </head>
 
-<body class="auth-body">
+<body>
 
 <div class="loading-screen" id="loadingScreen">
 <div class="spinner"></div>
@@ -86,10 +242,8 @@ Don’t have an account?
 <a href="signup.html">Create Account</a>
 </p>
 
-<p style="margin-top:10px;">
-<a href="forgot-password.html" style="color:#60a5fa; font-size:14px;">
-Forgot Password?
-</a>
+<p class="forgot">
+<a href="forgot-password.html">Forgot Password?</a>
 </p>
 
 </div>
@@ -106,61 +260,53 @@ if(theme === "dark"){
 document.body.classList.add("dark");
 }
 
-
 /* ================= LOGIN ================= */
 
 const form = document.querySelector(".auth-form");
 const loading = document.getElementById("loadingScreen");
-const loginBtn = document.getElementById("loginBtn");
 
-form.addEventListener("submit", async (e)=>{
+form.addEventListener("submit", async function(e){
 
 e.preventDefault();
 
-const email = form[0].value;
-const password = form[1].value;
+const email = form.querySelector("input[type='email']").value;
+const password = form.querySelector("input[type='password']").value;
 
-loading.style.display = "flex";
-loginBtn.disabled = true;
+loading.style.display="flex";
 
 try{
 
 const res = await fetch("http://localhost:5000/api/login",{
-
 method:"POST",
 headers:{
 "Content-Type":"application/json"
 },
-
 body:JSON.stringify({email,password})
-
 });
 
 const data = await res.json();
 
-if(res.ok){
+loading.style.display="none";
+
+if(!res.ok){
+alert(data.message || "Login failed");
+return;
+}
 
 localStorage.setItem("token",data.token);
 localStorage.setItem("name",data.name);
-localStorage.setItem("userId",data.id);
+localStorage.setItem("userId",data.userId);
 
-window.location.href="dashboard.html";
-
+if(data.role === "admin"){
+window.location.href="admin-dashboard.html";
 }else{
-
-loading.style.display="none";
-loginBtn.disabled=false;
-
-alert(data.message || "Login failed");
-
+window.location.href="dashboard.html";
 }
 
 }catch(err){
 
 loading.style.display="none";
-loginBtn.disabled=false;
-
-alert("Server error. Please try again.");
+alert("Server error");
 
 }
 
@@ -170,3 +316,4 @@ alert("Server error. Please try again.");
 
 </body>
 </html>
+
