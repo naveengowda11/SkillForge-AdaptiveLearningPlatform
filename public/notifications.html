@@ -166,53 +166,80 @@ color:#777;
 
 <h1 style="margin-bottom:25px;">Notifications</h1>
 
-<div class="notifications-card">
+<div class="notifications-card" id="notificationsList">
 
+<!-- Notifications will load here -->
+
+</div>
+
+</div>
+
+</div>
+
+<script>
+
+const API = "http://localhost:5000";
+
+const token = localStorage.getItem("token");
+
+async function loadNotifications(){
+
+try{
+
+const res = await fetch(API + "/api/notifications",{
+headers:{
+"Authorization":"Bearer " + token
+}
+});
+
+const notifications = await res.json();
+// Mark all notifications as read
+await fetch(API + "/api/notifications/mark-read",{
+method:"POST",
+headers:{
+"Authorization":"Bearer "+token
+}
+});
+const container = document.getElementById("notificationsList");
+
+container.innerHTML = "";
+
+if(!notifications || notifications.length === 0){
+
+container.innerHTML = "<p>No notifications yet</p>";
+return;
+
+}
+
+notifications.forEach(n=>{
+
+const date = new Date(n.date);
+
+const time = date.toLocaleString();
+
+container.innerHTML += `
 <div class="notification">
-<i class="ri-user-add-line"></i>
+<i class="ri-notification-3-line"></i>
 <div class="notification-text">
-Anna Morgan sent you a friend request
+${n.message}
 </div>
-<div class="time">2 min ago</div>
+<div class="time">${time}</div>
 </div>
+`;
 
-<div class="notification">
-<i class="ri-message-3-line"></i>
-<div class="notification-text">
-New message from Instructor
-</div>
-<div class="time">10 min ago</div>
-</div>
+});
 
-<div class="notification">
-<i class="ri-trophy-line"></i>
-<div class="notification-text">
-You unlocked a certificate for Machine Learning Foundations
-</div>
-<div class="time">1 hour ago</div>
-</div>
+}catch(err){
 
-<div class="notification">
-<i class="ri-book-open-line"></i>
-<div class="notification-text">
-New course added: Deep Learning Advanced
-</div>
-<div class="time">Yesterday</div>
-</div>
+console.log("Notification error",err);
 
-<div class="notification">
-<i class="ri-bar-chart-line"></i>
-<div class="notification-text">
-Your performance improved this week
-</div>
-<div class="time">2 days ago</div>
-</div>
+}
 
-</div>
+}
 
-</div>
+loadNotifications();
 
-</div>
+</script>
 
 </body>
 </html>
