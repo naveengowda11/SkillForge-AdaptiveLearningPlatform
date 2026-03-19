@@ -1,142 +1,135 @@
-SkillForge – Adaptive Learning Platform
+🚀 SkillForge – Adaptive Learning Platform
 
-SkillForge is a full-stack learning platform I built with the idea of making learning more personalized and performance-driven. The goal is simple — instead of giving the same content to everyone, the system adapts based on how a student performs.
+SkillForge is a full-stack learning platform built to explore how education can move from static content to performance-driven learning.
 
-This project is designed more like a real product than just a demo, with proper authentication, course flow, testing, and user tracking.
+Instead of giving every user the same path, SkillForge focuses on adapting the learning experience based on how a student performs.
 
-What the Project Does
+💡 Why SkillForge?
 
-SkillForge allows users to register, log in securely, and access courses. After learning, they can take tests, and based on their performance, the system tracks their progress and shows insights.
+Most learning platforms deliver content.
+SkillForge tries to answer a different question:
 
-There’s also an admin side where courses and data can be managed.
+What if the platform could understand how you're learning and guide you accordingly?
 
-Features
-Authentication
+This project is my attempt to build that idea into a working system.
 
-User registration with OTP verification
+✨ What Makes It Interesting
 
-Secure login system
+Adaptive testing based on performance
 
-JWT-based authentication
+AI-powered tutor integration (local model)
 
-Password hashing using bcrypt
+Personalized dashboard and analytics
 
-Role-based access (student and admin)
+Full authentication and role-based system
 
-User Profile
+End-to-end learning flow (course → test → result → progress)
 
-Users can update personal details
+It’s not just pages — it’s a complete learning cycle.
 
-Add education, skills, and interests
+🧩 Features
+🔐 Authentication
 
-Upload profile photo
+Email + OTP verification
 
-Add GitHub and LinkedIn links
+JWT-based secure sessions
 
-Course System
+Role-based access (Student / Admin)
 
-Structured courses (mainly AI-focused)
+👤 User Profile
 
-Different levels of learning
+Education, skills, interests
 
-Access control for enrolled users
+GitHub & LinkedIn integration
 
-Adaptive Test Module
+Profile image upload
 
-Tests based on course content
+📚 Course System
 
-Stores and tracks results
+Structured learning flow
 
-Helps analyze student performance
+Course-level access control
 
-Dashboard
+Modular content design
 
-Personalized dashboard for each user
+🧠 Adaptive Testing
 
-Clean layout with sidebar navigation
+Dynamic quizzes
 
-Shows user-related data and progress
+Tracks performance over time
 
-Database
+Stores results for analysis
 
-SQLite used for storage
+📊 Dashboard & Analytics
 
-Proper separation of users, profiles, and test data
+User-specific data
 
-Tech Stack
+Performance insights
+
+Clean and simple UI
+
+🤖 AI Tutor
+
+Local LLM (Phi-3 via Ollama)
+
+Helps explain concepts
+
+Designed to simulate guided learning
+
+🛠 Tech Stack
 
 Frontend
 
-HTML
-
-CSS
-
-JavaScript
+HTML, CSS, JavaScript
 
 Backend
 
-Node.js
+Node.js, Express
 
-Express.js
+Database
 
 SQLite
 
 Security
 
-JWT authentication
+JWT Authentication
 
-bcrypt for password hashing
+bcrypt password hashing
 
-Environment variables for sensitive data
+Environment-based configs
 
-Running the Project Locally
-
-Clone the repository:
-
+⚙️ Run Locally
 git clone https://github.com/yourusername/SkillForge-AdaptiveLearningPlatform.git
-
-Go to backend:
-
 cd SkillForge/backend
-
-Install dependencies:
-
 npm install
+node server.js
 
-Create a .env file inside backend:
+Create a .env file:
 
 PORT=5000
 JWT_SECRET=your_secret_key
 EMAIL_USER=your_email
 EMAIL_PASS=your_app_password
 
-Run the server:
-
-node server.js
-
-Open in browser:
+Open:
 
 http://localhost:5000
-What I Plan to Improve
+📈 What’s Next
 
-This is still evolving. Some things I want to add next:
+Smarter recommendations based on performance
 
-Better AI-based recommendations
+Deeper AI integration for personalized guidance
 
-Smarter adaptive learning logic
+Better analytics and insights
 
-More detailed analytics
+Deployment and scalability improvements
 
-Improved course tracking
-
-Deployment and scaling
-
-About Me
+👨‍💻 About
 
 Naveen Kumar B
 CSE (Data Science)
 
-Project Status
+📌 Status
 
-The core features are working and stable.
-Still improving the system and planning to make it more intelligent and scalable
+Actively being improved.
+Core system is functional and evolving towards a more intelligent learning experience.
