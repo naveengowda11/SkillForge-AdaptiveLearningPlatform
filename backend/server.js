@@ -1,7 +1,7 @@
 require("dotenv").config();
 
 const express = require("express");
-const app = express(); // ✅ MUST COME FIRST
+const app = express(); 
 
 const sqlite3 = require("sqlite3").verbose();
 const bcrypt = require("bcrypt");
@@ -12,24 +12,24 @@ const nodemailer = require("nodemailer");
 const path = require("path");
 const jwt = require("jsonwebtoken");
 const GoogleStrategy = require("passport-google-oauth20").Strategy;
-/* ✅ PASSPORT (if you're using Google login) */
+
 
 const passport = require("passport");
 const session = require("express-session");
 
-/* ✅ MIDDLEWARES */
+/*  MIDDLEWARES */
 app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-/* ✅ SESSION (needed for passport) */
+/*  SESSION (needed for passport) */
 app.use(session({
   secret: "skillforge",
   resave: false,
   saveUninitialized: true
 }));
 
-/* ✅ PASSPORT INIT */
+/*  PASSPORT INIT */
 app.use(passport.initialize());
 app.use(passport.session());
 passport.serializeUser((user, done) => {
@@ -70,10 +70,10 @@ app.use("/uploads", express.static("uploads"));
 
 const FRONTEND_PATH = path.join(__dirname, "../public");
 
-/* ✅ Serve public folder properly */
+/* Serve public folder properly */
 app.use(express.static(FRONTEND_PATH));
 
-/* ✅ Landing page */
+/*  Landing page */
 app.get("/", (req, res) => {
 res.sendFile(path.join(FRONTEND_PATH, "index.html"));
 });
@@ -369,7 +369,7 @@ app.get("/auth/google/callback",
       { expiresIn: "1h" }
     );
 
-    // ✅ SEND TOKEN IN URL
+    // SEND TOKEN IN URL
     res.redirect(`/dashboard.html?token=${token}`);
   }
 );
@@ -1546,11 +1546,6 @@ res.json(rows);
 });
 
 });
-
-
-/* ================= FILE UPLOAD ================= */
-
-
 /* ================= UPLOAD FILE ================= */
 
 app.post("/api/files", upload.single("file"), (req,res)=>{
@@ -1973,10 +1968,10 @@ app.listen(PORT, () => {
 
 const url = `http://localhost:${PORT}`;
 
-console.log("\n======================================");
+console.log("\n------------------------------------");
 console.log(" SkillForge Server Started");
-console.log("======================================");
+console.log("---------------------------------------");
 console.log(` Open App: ${url}`);
-console.log("======================================\n");
+console.log("---------------------------------------\n");
 
 });
