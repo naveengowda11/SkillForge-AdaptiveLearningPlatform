@@ -1,149 +1,142 @@
-# SkillForge-AdaptiveLearningPlatform
+SkillForge – Adaptive Learning Platform
 
+SkillForge is a full-stack learning platform I built with the idea of making learning more personalized and performance-driven. The goal is simple — instead of giving the same content to everyone, the system adapts based on how a student performs.
 
-SkillForge is a full-stack AI-focused adaptive learning platform designed to provide personalized learning experiences based on student performance.
+This project is designed more like a real product than just a demo, with proper authentication, course flow, testing, and user tracking.
 
-This project is built as a production-style web application with authentication, role-based access, adaptive testing, and performance tracking.
+What the Project Does
 
----
+SkillForge allows users to register, log in securely, and access courses. After learning, they can take tests, and based on their performance, the system tracks their progress and shows insights.
 
-## 🌟 Current Features Implemented
+There’s also an admin side where courses and data can be managed.
 
-### 🔐 Authentication System
-- User Registration
-- Email OTP Verification
-- Secure Login
-- JWT-based authentication
-- Password hashing
-- Role-based access (Student / Admin)
+Features
+Authentication
 
-### 👤 Profile Management
-- Update personal details
-- Education & graduation details
-- Skills & interests
-- LinkedIn & GitHub links
-- Profile photo upload
+User registration with OTP verification
 
-### 📚 Course System
-- AI-focused course structure
-- Beginner to Advanced level learning pages
-- Protected course access
+Secure login system
 
-### 🧠 Adaptive Test Module
-- Performance-based testing
-- Tracks student results
-- Performance page for analytics
+JWT-based authentication
 
-### 📊 Dashboard
-- Protected dashboard
-- Sidebar layout
-- User-specific data
-- Clean UI structure
+Password hashing using bcrypt
 
-### 🗄 Database
-- SQLite database
-- Normalized tables
-- Profile storage
-- User storage
-- Test results storage
+Role-based access (student and admin)
 
----
+User Profile
 
-## 🛠 Tech Stack
+Users can update personal details
 
-### Frontend
-- HTML
-- CSS
-- Vanilla JavaScript
+Add education, skills, and interests
 
-### Backend
-- Node.js
-- Express.js
-- SQLite
+Upload profile photo
 
-### Security
-- JWT Authentication
-- bcrypt password hashing
-- Environment variables (.env)
-- Role-based route protection
+Add GitHub and LinkedIn links
 
----
+Course System
 
-## ⚙️ How to Run Locally
+Structured courses (mainly AI-focused)
 
-### 1️⃣ Clone Repository
+Different levels of learning
 
+Access control for enrolled users
+
+Adaptive Test Module
+
+Tests based on course content
+
+Stores and tracks results
+
+Helps analyze student performance
+
+Dashboard
+
+Personalized dashboard for each user
+
+Clean layout with sidebar navigation
+
+Shows user-related data and progress
+
+Database
+
+SQLite used for storage
+
+Proper separation of users, profiles, and test data
+
+Tech Stack
+
+Frontend
+
+HTML
+
+CSS
+
+JavaScript
+
+Backend
+
+Node.js
+
+Express.js
+
+SQLite
+
+Security
+
+JWT authentication
+
+bcrypt for password hashing
+
+Environment variables for sensitive data
+
+Running the Project Locally
+
+Clone the repository:
 
 git clone https://github.com/yourusername/SkillForge-AdaptiveLearningPlatform.git
 
-
-### 2️⃣ Navigate to Project
-
+Go to backend:
 
 cd SkillForge/backend
 
-
-### 3️⃣ Install Dependencies
-
+Install dependencies:
 
 npm install
 
-
-### 4️⃣ Create .env File
-
-Inside backend folder:
-
+Create a .env file inside backend:
 
 PORT=5000
 JWT_SECRET=your_secret_key
 EMAIL_USER=your_email
 EMAIL_PASS=your_app_password
 
-
-### 5️⃣ Start Server
-
+Run the server:
 
 node server.js
 
-
-Server will run at:
+Open in browser:
 
 http://localhost:5000
+What I Plan to Improve
 
+This is still evolving. Some things I want to add next:
 
----
+Better AI-based recommendations
 
-## 🔒 Environment Variables
+Smarter adaptive learning logic
 
-The following variables must be configured:
+More detailed analytics
 
-- JWT_SECRET
-- EMAIL_USER
-- EMAIL_PASS
-- PORT
+Improved course tracking
 
-⚠️ .env file is not included in repository for security reasons.
+Deployment and scaling
 
----
+About Me
 
-## 🎯 Future Improvements (Planned)
+Naveen Kumar B
+CSE (Data Science)
 
-- AI Tutor Integration
-- Recommendation Engine based on test performance
-- Real-time analytics
-- Course progress tracking
-- Production deployment
+Project Status
 
----
-
-## 👨‍💻 Author
-
-**Naveen Kumar B**  
-CSE (Data Science)  
-
----
-
-## 📌 Project Status
-
-Currently under active development.
-Frontend core systems are functional.
+The core features are working and stable.
+Still improving the system and planning to make it more intelligent and scalable
