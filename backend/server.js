@@ -1,6 +1,8 @@
 require("dotenv").config();
 
 const express = require("express");
+const app = express(); // ✅ MUST COME FIRST
+
 const sqlite3 = require("sqlite3").verbose();
 const bcrypt = require("bcrypt");
 const fetch = (...args) => import('node-fetch').then(({default: fetch}) => fetch(...args));
@@ -8,10 +10,35 @@ const cors = require("cors");
 const multer = require("multer");
 const nodemailer = require("nodemailer");
 const path = require("path");
-
-const app = express();
 const jwt = require("jsonwebtoken");
+const GoogleStrategy = require("passport-google-oauth20").Strategy;
+/* ✅ PASSPORT (if you're using Google login) */
 
+const passport = require("passport");
+const session = require("express-session");
+
+/* ✅ MIDDLEWARES */
+app.use(cors());
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+
+/* ✅ SESSION (needed for passport) */
+app.use(session({
+  secret: "skillforge",
+  resave: false,
+  saveUninitialized: true
+}));
+
+/* ✅ PASSPORT INIT */
+app.use(passport.initialize());
+app.use(passport.session());
+passport.serializeUser((user, done) => {
+  done(null, user);
+});
+
+passport.deserializeUser((user, done) => {
+  done(null, user);
+});
 function authenticateToken(req,res,next){
 
 const authHeader = req.headers["authorization"];
@@ -41,12 +68,14 @@ app.use(express.urlencoded({ extended: true }));
 app.use("/uploads", express.static("uploads"));
 /* ================= FRONTEND LANDING PAGE ================= */
 
-const FRONTEND_PATH = path.join(__dirname, "../");
+const FRONTEND_PATH = path.join(__dirname, "../public");
 
+/* ✅ Serve public folder properly */
 app.use(express.static(FRONTEND_PATH));
 
+/* ✅ Landing page */
 app.get("/", (req, res) => {
-res.sendFile(path.join(FRONTEND_PATH, "public/index.html"));
+res.sendFile(path.join(FRONTEND_PATH, "index.html"));
 });
 const SECRET_KEY = process.env.JWT_SECRET || "skillforge_secret";
 
@@ -295,6 +324,55 @@ db.run(
 });
 
 }
+// ================= GOOGLE OAUTH =================
+passport.use(new GoogleStrategy({
+  clientID: "Google_Client_iD",
+  clientSecret: "Clien_sceret",
+  callbackURL: "http://localhost:5000/auth/google/callback"
+},
+(accessToken, refreshToken, profile, done) => {
+
+  const email = profile.emails[0].value;
+  const name = profile.displayName;
+
+  db.get("SELECT * FROM users WHERE email=?", [email], (err,user)=>{
+
+    if(user){
+      return done(null,user);
+    }
+
+    db.run(
+      "INSERT INTO users(name,email,password,created_at) VALUES(?,?,?,?)",
+      [name,email,"google",new Date().toISOString()],
+      function(){
+        done(null,{id:this.lastID,name,email});
+      }
+    );
+
+  });
+
+}));
+console.log("CLIENT ID:", process.env.CLIENT_ID);
+console.log("CALLBACK URL:", "http://localhost:5000/auth/google/callback");
+//`================= GOOGLE OAUTH ROUTES =================
+app.get("/auth/google",
+  passport.authenticate("google",{ scope:["profile","email"] })
+);
+
+app.get("/auth/google/callback",
+  passport.authenticate("google", { session: false }),
+  (req, res) => {
+
+    const token = jwt.sign(
+      { id: req.user.id, role: "student" },
+      SECRET_KEY,
+      { expiresIn: "1h" }
+    );
+
+    // ✅ SEND TOKEN IN URL
+    res.redirect(`/dashboard.html?token=${token}`);
+  }
+);
 // ================= EMAIL CONFIG =================
 
 const otpStore = new Map();
@@ -1822,52 +1900,63 @@ res.json({online:row.online});
 
 app.post("/api/ai-chat", async (req,res)=>{
 
-const {message} = req.body;
+const { message, context } = req.body;
 
-if(!message){
-return res.json({reply:"Please ask a question."});
+let finalPrompt = "";
+
+if(context === "quiz-feedback"){
+
+finalPrompt = `
+You are an AI tutor for SkillForge.
+
+A student completed a quiz.
+
+Score: ${message.score}/${message.total}
+Percentage: ${message.percentage}%
+Course: ${message.course}
+
+Give:
+- 1 short improvement tip
+- 1 suggestion on what to focus next
+
+Keep it under 80 words.
+`;
+
+}else{
+
+finalPrompt = `
+You are an AI tutor for SkillForge.
+
+Rules:
+- Explain simply
+- Keep answers short
+- Focus on learning
+
+Question:
+${message}
+`;
+
 }
 
 try{
 
 const response = await fetch("http://localhost:11434/api/generate",{
 method:"POST",
-headers:{
-"Content-Type":"application/json"
-},
+headers:{ "Content-Type":"application/json" },
 body:JSON.stringify({
 model:"phi3",
-prompt: `
-You are an AI tutor for SkillForge, an online learning platform.
-
-Rules:
-- Help students understand course concepts.
-- Explain topics simply.
-- Keep answers short (under 120 words).
-- Focus on learning topics like programming, AI, data science and technology.
-
-Student Question:
-${message}
-
-Answer:
-`,
+prompt: finalPrompt,
 stream:false
 })
 });
 
 const data = await response.json();
 
-res.json({
-reply:data.response
-});
+res.json({ reply:data.response });
 
 }catch(err){
 
-console.log(err);
-
-res.json({
-reply:"AI tutor is currently unavailable."
-});
+res.json({ reply:"AI unavailable" });
 
 }
 
@@ -1885,11 +1974,9 @@ app.listen(PORT, () => {
 const url = `http://localhost:${PORT}`;
 
 console.log("\n======================================");
-console.log("🚀 SkillForge Server Started");
+console.log(" SkillForge Server Started");
 console.log("======================================");
-console.log(`🌐 Landing Page: ${url}`);
-console.log(`📊 Admin Dashboard: ${url}/admin-dashboard.html`);
-console.log(`🎓 Student Dashboard: ${url}/dashboard.html`);
+console.log(` Open App: ${url}`);
 console.log("======================================\n");
 
 });
