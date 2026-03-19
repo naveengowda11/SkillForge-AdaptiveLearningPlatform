@@ -1,0 +1,366 @@
+<!DOCTYPE html>
+<html>
+<head>
+
+<title>Final Quiz</title>
+
+<link href="https://cdn.jsdelivr.net/npm/remixicon@3.5.0/fonts/remixicon.css" rel="stylesheet">
+
+<style>
+
+body{
+font-family:Inter;
+background:linear-gradient(135deg,#c6c4ff,#98c5ff);
+height:100vh;
+display:flex;
+align-items:center;
+justify-content:center;
+margin:0;
+}
+
+.container{
+width:95%;
+height:92vh;
+background:#f6f7fb;
+border-radius:28px;
+display:flex;
+overflow:hidden;
+}
+
+.sidebar{
+width:80px;
+background:#fff;
+display:flex;
+flex-direction:column;
+align-items:center;
+padding-top:20px;
+gap:30px;
+}
+
+.sidebar button{
+width:45px;
+height:45px;
+border:none;
+border-radius:12px;
+background:#f0f2f8;
+cursor:pointer;
+display:flex;
+align-items:center;
+justify-content:center;
+}
+
+.sidebar button i{
+font-size:20px;
+color:#444;
+}
+
+.sidebar button.active{
+background:#111;
+}
+
+.sidebar button.active i{
+color:white;
+}
+
+.content{
+flex:1;
+padding:40px;
+overflow:auto;
+}
+
+.card{
+background:white;
+padding:30px;
+border-radius:18px;
+max-width:800px;
+}
+
+.question{
+font-size:18px;
+font-weight:600;
+margin-bottom:20px;
+}
+
+.option{
+padding:12px;
+border:1px solid #ddd;
+border-radius:10px;
+margin-bottom:10px;
+cursor:pointer;
+}
+
+.option:hover{
+background:#f3f5ff;
+}
+
+.selected{
+background:#e9ecff;
+border-color:#6c7cff;
+}
+
+.next-btn{
+margin-top:20px;
+background:linear-gradient(135deg,#6c7cff,#5a67ff);
+color:white;
+border:none;
+padding:12px 20px;
+border-radius:10px;
+cursor:pointer;
+}
+
+</style>
+
+</head>
+
+<body>
+
+<div class="container">
+
+<div class="sidebar">
+
+<button onclick="location.href='dashboard.html'">
+<i class="ri-home-line"></i>
+</button>
+
+<button class="active">
+<i class="ri-question-line"></i>
+</button>
+
+</div>
+
+<div class="content">
+
+<h1>Final Quiz</h1>
+
+<div class="card" id="quizCard">
+
+<div id="quizContainer">
+
+<div id="questionText" class="question"></div>
+
+<div id="options"></div>
+
+<button class="next-btn" onclick="nextQuestion()">
+Next
+</button>
+
+</div>
+
+<!-- RESULT SCREEN -->
+
+<div id="resultContainer" style="display:none;text-align:center">
+
+<h2>Quiz Result</h2>
+
+<h3 id="scoreText"></h3>
+
+<p id="percentageText"></p>
+
+<p id="statusText"></p>
+
+<p id="certificateText"></p>
+
+<div style="margin-top:20px">
+
+<button id="viewCertBtn" class="next-btn" onclick="location.href='certificates.html'">
+View Certificate
+</button>
+
+<button class="next-btn" onclick="location.href='courses.html'" style="margin-left:10px">
+Back to Courses
+</button>
+
+</div>
+
+</div>
+
+</div>
+
+</div>
+
+</div>
+
+</div>
+
+<script>
+
+const API="http://localhost:5000";
+
+const urlParams = new URLSearchParams(window.location.search);
+const course = decodeURIComponent(urlParams.get("course"));
+
+/* SAVE COURSE FOR CERTIFICATE PAGE */
+
+localStorage.setItem("selectedCourse",course);
+
+let questions=[];
+let current=0;
+let score=0;
+let selectedOption=null;
+
+/* LOAD FINAL QUIZ */
+
+async function loadQuiz(){
+
+try{
+
+const res = await fetch(`${API}/api/final-quiz/${encodeURIComponent(course)}`);
+
+questions = await res.json();
+
+if(!questions || questions.length===0){
+
+alert("Final quiz not available for this course yet.");
+window.location.href="courses.html";
+return;
+
+}
+
+showQuestion();
+
+}catch(err){
+
+console.log("Quiz load error",err);
+alert("Failed to load quiz");
+
+}
+
+}
+
+/* SHOW QUESTION */
+
+function showQuestion(){
+
+const q = questions[current];
+
+document.getElementById("questionText").innerText =
+`Q${current+1}. ${q.question}`;
+
+const optionsDiv = document.getElementById("options");
+
+optionsDiv.innerHTML="";
+
+[q.option1,q.option2,q.option3,q.option4].forEach((opt,index)=>{
+
+const div=document.createElement("div");
+
+div.className="option";
+div.innerText=opt;
+
+div.onclick=()=>selectOption(div,index+1);
+
+optionsDiv.appendChild(div);
+
+});
+
+}
+
+/* SELECT OPTION */
+
+function selectOption(element,value){
+
+selectedOption=value;
+
+document.querySelectorAll(".option").forEach(o=>{
+o.classList.remove("selected");
+});
+
+element.classList.add("selected");
+
+}
+
+/* NEXT QUESTION */
+
+function nextQuestion(){
+
+if(selectedOption===null){
+alert("Please select an answer");
+return;
+}
+
+if(selectedOption===questions[current].answer){
+score++;
+}
+
+selectedOption=null;
+current++;
+
+if(current<questions.length){
+
+showQuestion();
+
+}else{
+
+finishQuiz();
+
+}
+
+}
+
+/* FINISH QUIZ */
+
+async function finishQuiz(){
+
+let percent = Math.round((score/questions.length)*100);
+
+const token = localStorage.getItem("token");
+
+/* SAVE FINAL QUIZ RESULT */
+
+await fetch(API+"/api/save-test-result",{
+method:"POST",
+headers:{
+"Content-Type":"application/json",
+Authorization:"Bearer "+token
+},
+body:JSON.stringify({
+course:course,
+score:score,
+total:questions.length,
+type:"final"
+})
+});
+
+/* RESULT SCREEN */
+
+document.getElementById("quizContainer").style.display="none";
+document.getElementById("resultContainer").style.display="block";
+
+document.getElementById("scoreText").innerText =
+`Score: ${score} / ${questions.length}`;
+
+document.getElementById("percentageText").innerText =
+`Percentage: ${percent}%`;
+
+if(percent >= 60){
+
+document.getElementById("statusText").innerText =
+"Status: PASSED";
+
+document.getElementById("certificateText").innerText =
+"Certificate Unlocked 🎉";
+
+}else{
+
+document.getElementById("statusText").innerText =
+"Status: FAILED";
+
+document.getElementById("certificateText").innerText =
+"Score 60% or above to unlock certificate";
+
+/* HIDE CERTIFICATE BUTTON */
+
+document.getElementById("viewCertBtn").style.display="none";
+
+}
+
+}
+
+/* INIT */
+
+loadQuiz();
+
+</script>
+
+</body>
+</html>
