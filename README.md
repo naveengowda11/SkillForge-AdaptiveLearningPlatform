@@ -1,92 +1,110 @@
-🚀 SkillForge – Adaptive Learning Platform
+SkillForge-AdaptiveLearningPlatform
 
-SkillForge is a full-stack learning platform built to explore how education can move from static content to performance-driven learning.
+SkillForge is a full-stack adaptive learning platform I built to explore how learning can be personalized based on student performance.
 
-Instead of giving every user the same path, SkillForge focuses on adapting the learning experience based on how a student performs.
+Instead of giving the same content to every user, the platform focuses on adapting the learning experience through testing, tracking, and feedback.
 
-💡 Why SkillForge?
+This project is designed like a real application with authentication, role-based access, course management, testing, and performance tracking.
 
-Most learning platforms deliver content.
-SkillForge tries to answer a different question:
+🌟 Current Features Implemented
+🔐 Authentication System
 
-What if the platform could understand how you're learning and guide you accordingly?
+User Registration with Email OTP verification
 
-This project is my attempt to build that idea into a working system.
+Secure Login system
 
-✨ What Makes It Interesting
+JWT-based authentication
 
-Adaptive testing based on performance
-
-AI-powered tutor integration (local model)
-
-Personalized dashboard and analytics
-
-Full authentication and role-based system
-
-End-to-end learning flow (course → test → result → progress)
-
-It’s not just pages — it’s a complete learning cycle.
-
-🧩 Features
-🔐 Authentication
-
-Email + OTP verification
-
-JWT-based secure sessions
+Password hashing using bcrypt
 
 Role-based access (Student / Admin)
 
-👤 User Profile
+Google OAuth login
 
-Education, skills, interests
+👤 Profile Management
 
-GitHub & LinkedIn integration
+Update personal details
 
-Profile image upload
+Education and skills information
+
+Interests and social links (GitHub, LinkedIn)
+
+Profile photo upload
 
 📚 Course System
 
-Structured learning flow
+Dynamic course creation (Admin)
 
-Course-level access control
+Course modules and lessons
 
-Modular content design
+Video-based learning
 
-🧠 Adaptive Testing
+Course enrollment system
 
-Dynamic quizzes
+🧠 Adaptive & Final Test Module
 
-Tracks performance over time
+Adaptive quizzes based on courses
 
-Stores results for analysis
+Final quiz after course completion
 
-📊 Dashboard & Analytics
+Automatic result calculation
 
-User-specific data
+Certificate generation based on performance
 
-Performance insights
+📊 Dashboard & Performance Tracking
 
-Clean and simple UI
+Personalized dashboard
+
+Course progress tracking
+
+Test performance analytics
+
+Leaderboard system
 
 🤖 AI Tutor
 
-Local LLM (Phi-3 via Ollama)
+Integrated AI tutor using local model (Phi-3 via Ollama)
 
-Helps explain concepts
+Helps explain concepts in simple terms
 
-Designed to simulate guided learning
+Responds to student queries in real-time
+
+🔔 Notifications & Social Features
+
+Notifications for course updates and completion
+
+Basic messaging system
+
+Friend system
+
+📁 File & Notes System
+
+Admin can upload course-related files
+
+Students can access and download notes
+
+🗄 Database
+
+SQLite database
+
+Normalized relational structure
+
+Stores users, profiles, courses, quizzes, results, and certificates
 
 🛠 Tech Stack
-
 Frontend
 
-HTML, CSS, JavaScript
+HTML
+
+CSS
+
+Vanilla JavaScript
 
 Backend
 
-Node.js, Express
+Node.js
 
-Database
+Express.js
 
 SQLite
 
@@ -96,40 +114,74 @@ JWT Authentication
 
 bcrypt password hashing
 
-Environment-based configs
+Environment variables (.env)
 
-⚙️ Run Locally
+Role-based route protection
+
+⚙️ How to Run Locally
+1️⃣ Clone Repository
+
 git clone https://github.com/yourusername/SkillForge-AdaptiveLearningPlatform.git
-cd SkillForge/backend
-npm install
-node server.js
 
-Create a .env file:
+2️⃣ Navigate to Project
+
+cd SkillForge/backend
+
+3️⃣ Install Dependencies
+
+npm install
+
+4️⃣ Create .env File
+
+Inside backend folder:
 
 PORT=5000
 JWT_SECRET=your_secret_key
 EMAIL_USER=your_email
 EMAIL_PASS=your_app_password
 
-Open:
+5️⃣ Start Server
+
+node server.js
+
+Server will run at:
 
 http://localhost:5000
-📈 What’s Next
 
-Smarter recommendations based on performance
+🔒 Environment Variables
 
-Deeper AI integration for personalized guidance
+The following variables must be configured:
 
-Better analytics and insights
+JWT_SECRET
 
-Deployment and scalability improvements
+EMAIL_USER
 
-👨‍💻 About
+EMAIL_PASS
+
+PORT
+
+⚠️ .env file is not included in repository for security reasons.
+
+🎯 Future Improvements (Planned)
+
+AI-based personalized suggestions after quizzes
+
+Better adaptive learning based on weak areas
+
+Improved analytics and visual insights
+
+Real-time features and activity tracking
+
+UI/UX improvements
+
+Production deployment and scaling
+
+👨‍💻 Author
 
 Naveen Kumar B
 CSE (Data Science)
 
-📌 Status
+📌 Project Status
 
-Actively being improved.
-Core system is functional and evolving towards a more intelligent learning experience.
+Currently under active development.
+Core features are working and the platform is continuously being improved
